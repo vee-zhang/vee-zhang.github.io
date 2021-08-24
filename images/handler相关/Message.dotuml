@@ -1,0 +1,19 @@
+ClassDiagram{
+    class Message{
+        public what:int
+        public arg1:int
+        public arg2:int
+        public obj:Object
+        package data:Bundle
+        package target:Handler
+        package callback:Runnable
+        public replyTo:Message
+        package next:Message
+        static private sPool:Message
+        static private sPoolSize:int
+        static private MAX_POOL_SIZE:int="50"
+        static obtain()
+        obtain1()
+    }
+
+}

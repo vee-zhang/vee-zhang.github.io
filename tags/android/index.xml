@@ -1,0 +1,78 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Android - 标签 - Vee&#39;s space</title>
+        <link>https://vee-zhang.github.io/tags/android/</link>
+        <description>Android - 标签 - Vee&#39;s space</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>vee.night@qq.com (Vee Zhang)</managingEditor>
+            <webMaster>vee.night@qq.com (Vee Zhang)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><lastBuildDate>Tue, 10 Aug 2021 14:33:15 &#43;0800</lastBuildDate><atom:link href="https://vee-zhang.github.io/tags/android/" rel="self" type="application/rss+xml" /><item>
+    <title>Android屏幕适配</title>
+    <link>https://vee-zhang.github.io/android%E5%B1%8F%E5%B9%95%E9%80%82%E9%85%8D/</link>
+    <pubDate>Tue, 10 Aug 2021 14:33:15 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/android%E5%B1%8F%E5%B9%95%E9%80%82%E9%85%8D/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>AMS</title>
+    <link>https://vee-zhang.github.io/ams/</link>
+    <pubDate>Mon, 09 Aug 2021 15:48:25 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/ams/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>Crash监控</title>
+    <link>https://vee-zhang.github.io/crash%E7%9B%91%E6%8E%A7/</link>
+    <pubDate>Mon, 09 Aug 2021 10:17:20 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/crash%E7%9B%91%E6%8E%A7/</guid>
+    <description><![CDATA[<p>Crash（应用崩溃）是由于代码异常而导致 App 非正常退出，导致应用程序无法继续使用，所有工作都停止的现象。发生 Crash 后需要重新启动应用（有些情况会自动重启），而且不管应用在开发阶段做得多么优秀，也无法避免 Crash 发生，特别是在 Android 系统中，系统碎片化严重、各 ROM 之间的差异，甚至系统Bug，都可能会导致Crash的发生。在 Android 应用中发生的 Crash 有两种类型，Java 层的 Crash 和 Native 层 Crash。这两种Crash 的监控和获取堆栈信息有所不同。</p>]]></description>
+</item><item>
+    <title>APK瘦身</title>
+    <link>https://vee-zhang.github.io/apk%E7%98%A6%E8%BA%AB/</link>
+    <pubDate>Mon, 09 Aug 2021 09:15:00 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/apk%E7%98%A6%E8%BA%AB/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>网络优化</title>
+    <link>https://vee-zhang.github.io/%E7%BD%91%E7%BB%9C%E4%BC%98%E5%8C%96/</link>
+    <pubDate>Fri, 06 Aug 2021 14:51:15 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/%E7%BD%91%E7%BB%9C%E4%BC%98%E5%8C%96/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>电量优化</title>
+    <link>https://vee-zhang.github.io/%E7%94%B5%E9%87%8F%E4%BC%98%E5%8C%96/</link>
+    <pubDate>Fri, 06 Aug 2021 09:46:55 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/%E7%94%B5%E9%87%8F%E4%BC%98%E5%8C%96/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>ANR问题解决</title>
+    <link>https://vee-zhang.github.io/anr%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/</link>
+    <pubDate>Wed, 04 Aug 2021 13:39:14 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/anr%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>UI卡顿与布局优化</title>
+    <link>https://vee-zhang.github.io/ui%E5%8D%A1%E9%A1%BF%E4%BC%98%E5%8C%96/</link>
+    <pubDate>Wed, 04 Aug 2021 10:39:30 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/ui%E5%8D%A1%E9%A1%BF%E4%BC%98%E5%8C%96/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>Android启动优化</title>
+    <link>https://vee-zhang.github.io/android%E5%90%AF%E5%8A%A8%E4%BC%98%E5%8C%96/</link>
+    <pubDate>Tue, 03 Aug 2021 10:27:09 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/android%E5%90%AF%E5%8A%A8%E4%BC%98%E5%8C%96/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>OOM与内存优化</title>
+    <link>https://vee-zhang.github.io/oom%E4%B8%8E%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96/</link>
+    <pubDate>Tue, 03 Aug 2021 10:16:07 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/oom%E4%B8%8E%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96/</guid>
+    <description><![CDATA[]]></description>
+</item></channel>
+</rss>

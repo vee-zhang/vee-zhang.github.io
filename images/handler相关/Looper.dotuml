@@ -1,0 +1,10 @@
+ClassDiagram{
+    class Looper{
+        static package sThreadLocal:ThreadLocal
+        package mQueue:MessageQueue
+
+        static public prepare()
+        static public loop()
+        static public getMainLooper()
+    }
+}
