@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title class="pjax-title">理解Android - Vee&#39;s space</title><meta name="Description" content="关于 DoIt 主题"><meta property="og:title" content="理解Android" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://vee-zhang.github.io/%E7%90%86%E8%A7%A3android.bp/" /><meta property="og:image" content="https://vee-zhang.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-07-15T13:32:52+08:00" />
+<meta property="article:modified_time" content="2022-07-15T13:32:52+08:00" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://vee-zhang.github.io/logo.png"/>
+
+<meta name="twitter:title" content="理解Android"/>
+<meta name="twitter:description" content=""/>
+<meta name="application-name" content="Vee&#39;s space">
+<meta name="apple-mobile-web-app-title" content="Vee&#39;s space">
+
+<meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://vee-zhang.github.io/%E7%90%86%E8%A7%A3android.bp/" /><link rel="prev" href="https://vee-zhang.github.io/ubuntu22.04%E5%AE%89%E8%A3%85repo/" /><link rel="next" href="https://vee-zhang.github.io/%E7%90%86%E8%A7%A3hal/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><meta name="google-site-verification" content="MQ8DNu27ayX6B_4ObiEDK09vGr1fdy7kOAnbd09hJk4" /><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "理解Android",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/vee-zhang.github.io\/%E7%90%86%E8%A7%A3android.bp\/"
+        },"image": ["https:\/\/vee-zhang.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","wordcount":  1533 ,
+        "url": "https:\/\/vee-zhang.github.io\/%E7%90%86%E8%A7%A3android.bp\/","datePublished": "2022-07-15T13:32:52+08:00","dateModified": "2022-07-15T13:32:52+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "xxxx","logo": {
+                    "@type": "ImageObject",
+                    "url": "https:\/\/vee-zhang.github.io\/images\/avatar.webp",
+                    "width":  528 ,
+                    "height":  560 
+                }},"author": {
+                "@type": "Person",
+                "name": "Vee Zhang"
+            },"description": ""
+    }
+    </script></head>
+
+<body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme);}
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('auto' === 'light' || 'auto' === 'dark' || 'auto' === 'black') setTheme('auto'), saveTheme('auto'); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let themeColorMeta = getMeta('theme-color');
+        if (document.body.getAttribute('theme') != 'light') themeColorMeta.content = '#000000';
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Vee&#39;s space"><span class="header-title-pre"><i class='far fa-edit fa-fw'></i></span>Vee&#39;s space</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 所有文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/series/"> 系列 </a><a class="menu-item" href="/about/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="#" onclick="return false;" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="#" onclick="return false;" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="#" onclick="return false;" class="menu-item theme-select" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                    <select class="color-theme-select" id="theme-select-desktop" title="切换主题">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                        <option value="black">黑色</option>
+                        <option value="auto">跟随系统</option>
+                    </select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Vee&#39;s space"><span class="header-title-pre"><i class='far fa-edit fa-fw'></i></span>Vee&#39;s space</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="#" onclick="return false;" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="#" onclick="return false;" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="#" onclick="return false;" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">所有文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/series/" title="">系列</a><a class="menu-item" href="/about/" title="">关于</a><a href="#" onclick="return false;" class="menu-item theme-select" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+                <select class="color-theme-select" id="theme-select-mobile" title="切换主题">
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
+                    <option value="black">黑色</option>
+                    <option value="auto">跟随系统</option>
+                </select>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content" id="toc-content-auto"></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("pageStyle", "wide")</script><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">理解Android</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><a href="https://github.com/vee-zhang" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="author fas fa-user-circle fa-fw"></i>Vee Zhang</a>
+                </span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2022-07-15">2022-07-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 1533 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 4 分钟&nbsp;<span id="/%E7%90%86%E8%A7%A3android.bp/" class="leancloud_visitors" data-flag-title="理解Android">
+                        <i class="far fa-eye fa-fw"></i>&nbsp;<span class=leancloud-visitors-count id=twikoo_visitors></span>&nbsp;次阅读
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#鸣谢">鸣谢</a></li>
+    <li><a href="#作用">作用</a></li>
+    <li><a href="#cc语言对编译器的选择">c/c+语言对编译器的选择</a></li>
+    <li><a href="#make的演变过程">make的演变过程</a></li>
+    <li><a href="#文件格式">文件格式</a>
+      <ul>
+        <li><a href="#语法">语法</a></li>
+        <li><a href="#默认模块">默认模块</a></li>
+        <li><a href="#预构建模块">预构建模块</a></li>
+        <li><a href="#命名空间">命名空间</a></li>
+      </ul>
+    </li>
+    <li><a href="#逻辑编程">逻辑编程</a>
+      <ul>
+        <li><a href="#类型">类型</a></li>
+        <li><a href="#通配符">通配符</a></li>
+        <li><a href="#变量">变量</a></li>
+        <li><a href="#注释">注释</a></li>
+        <li><a href="#运算符">运算符</a></li>
+        <li><a href="#条件">条件</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="鸣谢">鸣谢</h2>
+<p>本文是边学官文和博客<a href="https://blog.csdn.net/fanx9339/article/details/106896653" target="_blank" rel="noopener noreffer">静默安装9339的文章</a>边做的整理，感谢原作！</p>
+<h2 id="作用">作用</h2>
+<h2 id="cc语言对编译器的选择">c/c+语言对编译器的选择</h2>
+<table>
+<thead>
+<tr>
+<th>language</th>
+<th>build-tool</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>c</td>
+<td>gcc,clang</td>
+</tr>
+<tr>
+<td>c++</td>
+<td>g++,clang++</td>
+</tr>
+</tbody>
+</table>
+<p>这里推荐选择<code>clang</code>系列，clang系列的效率更高，编译产物也更小。</p>
+<h2 id="make的演变过程">make的演变过程</h2>
+<p>上面这些编译器都只能编译一个文件，所以当我们跑项目，有多个文件的时候，就需要做个批处理。</p>
+<p>最早出现了<code>make</code>工具，通过编写<code>makefile</code>作为文件配置，实现了批处理。</p>
+<p>但项目越来越大，文件越来越多，makefile编写也会越来越复杂，所以聪明的老外又弄出一个<code>cmake</code>工具，pregrammer们可以用简化后的<code>cmakefile</code>，通过这个工具转化为makefile，并且<code>cmakefile</code>中可以加入一些判断和循环等逻辑，帮我们省了不少工作量，最后<strong>cmake还是跨平台的</strong>。</p>
+<p>然后google的大佬在编译越来越庞大的源码时，慢到不能忍，他就怪到了cmake的头上，所以做出一个<code>Ninja</code>来替换cmake，用<code>.ninja</code>文件替换<code>cmakefile</code>。<strong>所以Ninja与cmake是平级的</strong>。</p>
+<p>最后，Ninja和cmake还是基于目录和文件的思维来组织项目（很有c的传统），google又弄出了个<code>Soong</code>来<strong>以「模块module」思维组织项目</strong>，同时带来了<code>Android.bp</code>文件，其内容描述的是模块结构，然后编译成<code>.ninja</code>文件，最后再由Ninja来实际编译。</p>
+<blockquote>
+<p>说白了就是层层封装，由于到Android10.0的源码中还存在Android.mk,所以带给我们的就是需要把make、ninja和soong都学会才能解决复杂问题，然后soong还是go语言写的，所以我还得学个go，真google！</p>
+</blockquote>
+<h2 id="文件格式">文件格式</h2>
+<p>我现在的理解，文件名必须是<code>Android.bp</code>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cc_binary {
+</span></span><span class="line"><span class="cl">    name: &#34;gzip&#34;,
+</span></span><span class="line"><span class="cl">    srcs: [&#34;src/test/minigzip.c&#34;],
+</span></span><span class="line"><span class="cl">    shared_libs: [&#34;libz&#34;],
+</span></span><span class="line"><span class="cl">    stl: &#34;none&#34;,
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>内容就是一个一个的模块，也没啥文件声明、版本号什么的，这点给好评。</p>
+</blockquote>
+<h3 id="语法">语法</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">moduleType {
+</span></span><span class="line"><span class="cl">  name:value,
+</span></span><span class="line"><span class="cl">  srcs:[
+</span></span><span class="line"><span class="cl">    &#34;src/test/minigzip.c&#34;,
+</span></span><span class="line"><span class="cl">    &#34;src/test/minigzip.c&#34;
+</span></span><span class="line"><span class="cl">  ]
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>每个模块由<code>模块类型</code>和<code>模块的属性</code>两部分组成，大括号里面的就是属性。</p>
+<ul>
+<li><code>moduleType</code>是固定的那几个，不能乱写，可在源码中<code>android/build/soong/androidmk/cmd/androidmk/android.go</code>中查看，也可以参考<a href="https://ci.android.com/builds/submitted/8833803/linux/latest/view/soong_build.html" target="_blank" rel="noopener noreffer">google慢成屎的网站</a></li>
+<li><code>name</code>是每个模块的<strong>必填项</strong>，并且<strong>文件内唯一</strong>。</li>
+<li><code>srcs</code>用于指定构建模块的源文件。[todo] 模块引用语法</li>
+</ul>
+<h3 id="默认模块">默认模块</h3>
+<p><code>cc_defaults</code>类型的模块可用于在多个模块中<strong>复用属性</strong>，如：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cc_defaults {
+</span></span><span class="line"><span class="cl">    name: &#34;gzip_defaults&#34;,
+</span></span><span class="line"><span class="cl">    shared_libs: [&#34;libz&#34;],
+</span></span><span class="line"><span class="cl">    stl: &#34;none&#34;,
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">cc_binary {
+</span></span><span class="line"><span class="cl">    name: &#34;gzip&#34;,
+</span></span><span class="line"><span class="cl">    defaults: [&#34;gzip_defaults&#34;],
+</span></span><span class="line"><span class="cl">    srcs: [&#34;src/test/minigzip.c&#34;],
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="预构建模块">预构建模块</h3>
+<ul>
+<li>[] 待完善</li>
+</ul>
+<h3 id="命名空间">命名空间</h3>
+<ul>
+<li>[] 待完善</li>
+</ul>
+<h2 id="逻辑编程">逻辑编程</h2>
+<h3 id="类型">类型</h3>
+<p>这里的变量和属性是<code>强类型</code>的，以初始化赋值时的类型来确定。</p>
+<ul>
+<li>布尔</li>
+<li>整型</li>
+<li>字符串</li>
+<li>字符串数组</li>
+<li>映射表（类似HashMap）</li>
+</ul>
+<h3 id="通配符">通配符</h3>
+<p><strong>接受文件列表的属性</strong>（如srcs）可以采用glob写法。</p>
+<p>这种写法可以包含通配符<code>*</code>，如<code>*.java</code>。</p>
+<ul>
+<li><code>*</code>匹配任意文件名，如<code>*.java</code>；</li>
+<li><code>**</code>匹配0～n个路径，如<code>java/**/*.java</code>同时匹配 java/Main.java 和 java/com/android/Main.java。</li>
+</ul>
+<h3 id="变量">变量</h3>
+<p>支持顶级变量形式：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">gzip_srcs = [&#34;src/test/minigzip.c&#34;],
+</span></span><span class="line"><span class="cl">cc_binary {
+</span></span><span class="line"><span class="cl">    name: &#34;gzip&#34;,
+</span></span><span class="line"><span class="cl">    srcs: gzip_srcs,
+</span></span><span class="line"><span class="cl">    shared_libs: [&#34;libz&#34;],
+</span></span><span class="line"><span class="cl">    stl: &#34;none&#34;,
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>变量只在文件内生效，且<strong>无法改变</strong>。可以通过<code>+=变量</code>的形式为其他变量赋值。</p>
+<h3 id="注释">注释</h3>
+<ul>
+<li>单行<code>//</code></li>
+<li>多行<code>/* */</code></li>
+</ul>
+<h3 id="运算符">运算符</h3>
+<blockquote>
+<p>可以使用 + 运算符附加字符串、字符串列表和映射。可以使用 + 运算符对整数求和。附加映射会生成两个映射中键的并集，并附加在两个映射中都存在的所有键的值。</p>
+</blockquote>
+<p>简言之就是只有一个<code>+</code>号能用。</p>
+<h3 id="条件">条件</h3>
+<p>Soong不支持条件判断，需要额外写个<code>go</code>文件实现。然后条件语句会转换为<strong>映射属性</strong>，再把映射属性赋值给模块的属性。</p>
+<p>比如,要区别不同的cpu架构：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">cc_library {
+</span></span><span class="line"><span class="cl">    ...
+</span></span><span class="line"><span class="cl">    srcs: [&#34;generic.cpp&#34;],
+</span></span><span class="line"><span class="cl">    arch: {
+</span></span><span class="line"><span class="cl">        arm: {
+</span></span><span class="line"><span class="cl">            srcs: [&#34;arm.cpp&#34;],
+</span></span><span class="line"><span class="cl">        },
+</span></span><span class="line"><span class="cl">        x86: {
+</span></span><span class="line"><span class="cl">            srcs: [&#34;x86.cpp&#34;],
+</span></span><span class="line"><span class="cl">        },
+</span></span><span class="line"><span class="cl">    },
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>还不会Go,先掠过。。。</p>
+<ul>
+<li>[] 学习Go,再回来补充这里。</li>
+</ul></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2022-07-15</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="#" onclick="return false;" title="分享到 Twitter" data-sharer="twitter" data-url="https://vee-zhang.github.io/%E7%90%86%E8%A7%A3android.bp/" data-title="理解Android"><i class="fab fa-twitter fa-fw"></i></a><a href="#" onclick="return false;" title="分享到 Facebook" data-sharer="facebook" data-url="https://vee-zhang.github.io/%E7%90%86%E8%A7%A3android.bp/"><i class="fab fa-facebook-square fa-fw"></i></a><a href="#" onclick="return false;" title="分享到 Instapaper" data-sharer="instapaper" data-url="https://vee-zhang.github.io/%E7%90%86%E8%A7%A3android.bp/" data-title="理解Android" data-description=""><i data-svg-src="/lib/simple-icons/icons/instapaper.min.svg"></i></a><a href="#" onclick="return false;" title="分享到 微博" data-sharer="weibo" data-url="https://vee-zhang.github.io/%E7%90%86%E8%A7%A3android.bp/" data-title="理解Android" data-ralateuid="xxxx"><i class="fab fa-weibo fa-fw"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="#" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/ubuntu22.04%E5%AE%89%E8%A3%85repo/" class="prev" rel="prev" title="Ubuntu22.04安装配置repo"><i class="fas fa-angle-left fa-fw"></i>Ubuntu22.04安装配置repo</a>
+            <a href="/%E7%90%86%E8%A7%A3hal/" class="next" rel="next" title="理解HAL">理解HAL<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+<div id="comments"><div id="twikoo"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://twikoo.js.org/">Twikoo</a>.
+            </noscript></div></article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.104.3">Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreffer" title="DoIt 0.2.10"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2021 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://github.com/vee-zhang" target="_blank" rel="noopener noreferrer">Vee Zhang</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div><script>
+                    if('serviceWorker' in navigator) {
+                        navigator.serviceWorker
+                            .register('/sw.min.js', { scope: '/' })
+                            .then(function(registration) {
+                                
+                            });
+                
+                        navigator.serviceWorker
+                            .ready
+                            .then(function(registration) {
+                                
+                            });
+                    }
+                </script></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/algoliasearch/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/topbar/topbar.min.js"></script><script type="text/javascript" src="/lib/pjax/pjax.min.js"></script><script type="text/javascript" src="/js/theme.min.js"></script></div>
+
+<div class="pjax-assets"><script type="text/javascript" src="/lib/twikoo/twikoo.all.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{"twikoo":{"el":"#twikoo","envId":"https://doit-docs-comment-twikoo.vercel.app/","lang":"zh-cn"}},"search":{"algoliaAppID":"5YGRNRQK1G","algoliaIndex":"zh_cn_index","algoliaSearchKey":"0ff6874805de24b84aa1d5ebccad56cd","highlightTag":"em","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"algolia"},"sharerjs":true};</script></div>
+</body>
+
+</html>

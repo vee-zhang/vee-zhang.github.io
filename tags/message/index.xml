@@ -1,0 +1,29 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Message - 标签 - Vee&#39;s space</title>
+        <link>https://vee-zhang.github.io/tags/message/</link>
+        <description>Message - 标签 - Vee&#39;s space</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>vee.night@qq.com (Vee Zhang)</managingEditor>
+            <webMaster>vee.night@qq.com (Vee Zhang)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><lastBuildDate>Tue, 09 Mar 2021 20:51:17 &#43;0000</lastBuildDate><atom:link href="https://vee-zhang.github.io/tags/message/" rel="self" type="application/rss+xml" /><item>
+    <title>Android中Message的一辈子</title>
+    <link>https://vee-zhang.github.io/android%E4%B8%ADmessage%E7%9A%84%E4%B8%80%E8%BE%88%E5%AD%90/</link>
+    <pubDate>Tue, 09 Mar 2021 20:51:17 &#43;0000</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/android%E4%B8%ADmessage%E7%9A%84%E4%B8%80%E8%BE%88%E5%AD%90/</guid>
+    <description><![CDATA[初始化 1 2 3 Looper.prepare(); Handler mHandler = new Handler(Looper.myLooper()); Looper.loop(); Looper.prepare()源码： 1 2 3 4 5 6 private static void prepare(boolean quitAllowed) { if (sThreadLocal.get() != null) { throw new RuntimeException(&#34;Only one Looper may be created per thread&#34;); } sThreadLocal.set(new Looper(quitAllowed)); } Looper的]]></description>
+</item><item>
+    <title>MessageQueue解读</title>
+    <link>https://vee-zhang.github.io/messagequeue%E8%A7%A3%E8%AF%BB/</link>
+    <pubDate>Thu, 04 Mar 2021 20:01:35 &#43;0000</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/messagequeue%E8%A7%A3%E8%AF%BB/</guid>
+    <description><![CDATA[回顾 handler发送消息： 1 2 3 4 5 6 7 8 9 10 private boolean enqueueMessage(@NonNull MessageQueue queue, @NonNull Message msg, long uptimeMillis) { msg.target = this; msg.workSourceUid = ThreadLocalWorkSource.getUid(); if (mAsynchronous) { msg.setAsynchronous(true); } return queue.enqueueMessage(msg, uptimeMillis);//最后调用的是]]></description>
+</item><item>
+    <title>Message解读</title>
+    <link>https://vee-zhang.github.io/message%E8%A7%A3%E8%AF%BB/</link>
+    <pubDate>Wed, 03 Mar 2021 15:03:03 &#43;0000</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/message%E8%A7%A3%E8%AF%BB/</guid>
+    <description><![CDATA[创建 我们都知道创建Message的时候有两种方式： 构造方法创建（不推荐）。 Message.obtain();（推荐）. 为了防止OOM，我们一]]></description>
+</item></channel>
+</rss>

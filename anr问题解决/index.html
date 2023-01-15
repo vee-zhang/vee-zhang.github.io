@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title class="pjax-title">ANR问题解决 - Vee&#39;s space</title><meta name="Description" content="关于 DoIt 主题"><meta property="og:title" content="ANR问题解决" />
+<meta property="og:description" content="" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://vee-zhang.github.io/anr%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" /><meta property="og:image" content="https://vee-zhang.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-08-04T13:39:14+08:00" />
+<meta property="article:modified_time" content="2021-08-04T13:39:14+08:00" />
+
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://vee-zhang.github.io/logo.png"/>
+
+<meta name="twitter:title" content="ANR问题解决"/>
+<meta name="twitter:description" content=""/>
+<meta name="application-name" content="Vee&#39;s space">
+<meta name="apple-mobile-web-app-title" content="Vee&#39;s space">
+
+<meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://vee-zhang.github.io/anr%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" /><link rel="prev" href="https://vee-zhang.github.io/ui%E5%8D%A1%E9%A1%BF%E4%BC%98%E5%8C%96/" /><link rel="next" href="https://vee-zhang.github.io/%E7%94%B5%E9%87%8F%E4%BC%98%E5%8C%96/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><meta name="google-site-verification" content="MQ8DNu27ayX6B_4ObiEDK09vGr1fdy7kOAnbd09hJk4" /><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "ANR问题解决",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/vee-zhang.github.io\/anr%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3\/"
+        },"image": ["https:\/\/vee-zhang.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "Android, 性能优化","wordcount":  744 ,
+        "url": "https:\/\/vee-zhang.github.io\/anr%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3\/","datePublished": "2021-08-04T13:39:14+08:00","dateModified": "2021-08-04T13:39:14+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "xxxx","logo": {
+                    "@type": "ImageObject",
+                    "url": "https:\/\/vee-zhang.github.io\/images\/avatar.webp",
+                    "width":  528 ,
+                    "height":  560 
+                }},"author": {
+                "@type": "Person",
+                "name": "Vee Zhang"
+            },"description": ""
+    }
+    </script></head>
+
+<body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme);}
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('auto' === 'light' || 'auto' === 'dark' || 'auto' === 'black') setTheme('auto'), saveTheme('auto'); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let themeColorMeta = getMeta('theme-color');
+        if (document.body.getAttribute('theme') != 'light') themeColorMeta.content = '#000000';
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Vee&#39;s space"><span class="header-title-pre"><i class='far fa-edit fa-fw'></i></span>Vee&#39;s space</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 所有文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/series/"> 系列 </a><a class="menu-item" href="/about/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="#" onclick="return false;" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="#" onclick="return false;" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="#" onclick="return false;" class="menu-item theme-select" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                    <select class="color-theme-select" id="theme-select-desktop" title="切换主题">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                        <option value="black">黑色</option>
+                        <option value="auto">跟随系统</option>
+                    </select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Vee&#39;s space"><span class="header-title-pre"><i class='far fa-edit fa-fw'></i></span>Vee&#39;s space</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="#" onclick="return false;" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="#" onclick="return false;" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="#" onclick="return false;" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">所有文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/series/" title="">系列</a><a class="menu-item" href="/about/" title="">关于</a><a href="#" onclick="return false;" class="menu-item theme-select" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+                <select class="color-theme-select" id="theme-select-mobile" title="切换主题">
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
+                    <option value="black">黑色</option>
+                    <option value="auto">跟随系统</option>
+                </select>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content" id="toc-content-auto"></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("pageStyle", "wide")</script><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">ANR问题解决</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><a href="https://github.com/vee-zhang" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="author fas fa-user-circle fa-fw"></i>Vee Zhang</a>
+                </span>&nbsp;<span class="post-category">收录于 </span>&nbsp;<span class="post-series">系列 <a href="/series/android%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/"><i class="far fa-list-alt fa-fw"></i>Android性能优化</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2021-08-04">2021-08-04</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 744 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 2 分钟&nbsp;<span id="/anr%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" class="leancloud_visitors" data-flag-title="ANR问题解决">
+                        <i class="far fa-eye fa-fw"></i>&nbsp;<span class=leancloud-visitors-count id=twikoo_visitors></span>&nbsp;次阅读
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#anr的概念">ANR的概念</a></li>
+        <li><a href="#anr产生场景">ANR产生场景</a></li>
+        <li><a href="#行为">行为</a></li>
+        <li><a href="#时限">时限</a></li>
+        <li><a href="#anr的错误日志">ANR的错误日志</a>
+          <ul>
+            <li><a href="#最重要的一句话">最重要的一句话</a></li>
+          </ul>
+        </li>
+        <li><a href="#trace文件">trace文件</a></li>
+        <li><a href="#墓碑文件">墓碑文件</a></li>
+        <li><a href="#线上监控">线上监控</a>
+          <ul>
+            <li><a href="#fileobserver">FileObserver</a></li>
+            <li><a href="#blockcanary">BlockCanary</a></li>
+            <li><a href="#safelooper">SafeLooper</a></li>
+            <li><a href="#仿watchdog">仿WatchDog</a></li>
+            <li><a href="#微信的解决方案">微信的解决方案</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h3 id="anr的概念">ANR的概念</h3>
+<p>是指应用程序未响应。</p>
+<p>由 <code>ActivityManager</code> 和 <code>WindowManager</code> 两个系统服务进行监视的。</p>
+<h3 id="anr产生场景">ANR产生场景</h3>
+<ol>
+<li>主线程耗时操作</li>
+<li>SP</li>
+<li>序列化</li>
+<li>并发造成死锁，block了主线程</li>
+<li>系统资源耗尽</li>
+</ol>
+<h3 id="行为">行为</h3>
+<ul>
+<li>前台产生ANR弹框询问用户是否等待；</li>
+<li>后台产生的ANR直接崩溃。</li>
+</ul>
+<h3 id="时限">时限</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>时常</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>前台服务</td>
+<td>20S</td>
+</tr>
+<tr>
+<td>后台服务</td>
+<td>200S</td>
+</tr>
+<tr>
+<td>前台广播</td>
+<td>10S</td>
+</tr>
+<tr>
+<td>后台广播</td>
+<td>60S</td>
+</tr>
+<tr>
+<td>ContentProvider</td>
+<td>10S</td>
+</tr>
+<tr>
+<td>输入事件</td>
+<td>5S</td>
+</tr>
+</tbody>
+</table>
+<h3 id="anr的错误日志">ANR的错误日志</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">2021-08-04 14:07:55.885 4563-4574/com.vee.myapplication I/e.myapplicatio: Thread<span class="o">[</span>7,tid<span class="o">=</span>4574,WaitingInMainSignalCatcherLoop,Thread*<span class="o">=</span>0x7250d39c00,peer<span class="o">=</span>0x167402a0,<span class="s2">&#34;Signal Catcher&#34;</span><span class="o">]</span>: reacting to signal <span class="m">3</span>
+</span></span><span class="line"><span class="cl">2021-08-04 14:07:56.015 4563-4574/com.vee.myapplication I/e.myapplicatio: Wrote stack traces to tombstoned
+</span></span><span class="line"><span class="cl">2021-08-04 14:08:07.027 4563-4563/com.vee.myapplication I/Choreographer: Skipped <span class="m">1202</span> frames!  The application may be doing too much work on its main thread.
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="最重要的一句话">最重要的一句话</h4>
+<p><strong>The application may be doing too much work on its main thread.</strong></p>
+<h3 id="trace文件"><del>trace文件</del></h3>
+<p>位置： <code>data/anr/traces_*.txt</code></p>
+<p>找到firstPid，即发生ANR的进程id。</p>
+<p>trace包含ANR的时间点和CPU使用率、主线程状态、其他线程状态等重要信息。</p>
+<p>但是5.0之后会被selinux挡住，获取不到。</p>
+<h3 id="墓碑文件">墓碑文件</h3>
+<p>看log中间的一条 <code>Wrote stack traces to tombstoned</code> ，意思已经把对战追踪写入了墓碑文件。<strong>墓碑文件没有读写权限</strong>。</p>
+<h3 id="线上监控">线上监控</h3>
+<p>线上监控的难点就在于，前台发生的ANR没有崩溃</p>
+<h4 id="fileobserver"><del>FileObserver</del></h4>
+<p>此方案基本不能用了。</p>
+<p>原理是监控 <code>/data/anr</code> 文件夹的变化，然后判断pid。</p>
+<h4 id="blockcanary"><del>BlockCanary</del></h4>
+<p>由于Android是基于消息驱动的，在Loop.loop()方法中：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-JAVA" data-lang="JAVA"><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">loop</span><span class="o">(){</span>
+</span></span><span class="line"><span class="cl">  <span class="o">...</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span><span class="o">(;;){</span>
+</span></span><span class="line"><span class="cl">    <span class="n">Message</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="na">next</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="o">(</span><span class="n">logging</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">){</span>
+</span></span><span class="line"><span class="cl">      <span class="n">logging</span><span class="o">.</span><span class="na">print</span><span class="o">(</span><span class="s">&#34;&gt;&gt;&gt;&gt;Dispatching to&#34;</span><span class="o">+</span><span class="n">msg</span><span class="o">.</span><span class="na">target</span><span class="o">+</span><span class="n">msg</span><span class="o">.</span><span class="na">what</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">msg</span><span class="o">.</span><span class="na">target</span><span class="o">.</span><span class="na">dispatchMessage</span><span class="o">(</span><span class="n">msg</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">  <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>根据 <code>queue.next()</code> 与 <code>msg.target.dispatchMessage(msg)</code> 的时间差来判断是否发生ANR，做法是自定义一个looging传进去：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">Looper</span><span class="o">.</span><span class="na">getMainLooper</span><span class="o">.</span><span class="na">setMessageLogging</span><span class="o">(</span><span class="n">myLogging</span><span class="o">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>通过重写 <code>print</code> 方法加入我们自己的逻辑。</p>
+<p>问题：logging有可能被改成null，反而造成NPE问题。</p>
+<h4 id="safelooper"><del>SafeLooper</del></h4>
+<p>反射hook主线程的looper，接管功能，插入时间差判断，但反射导致大量性能损耗。</p>
+<h4 id="仿watchdog"><del>仿WatchDog</del></h4>
+<p>启动一个守护线程，先向主线程发送一个消息，再通过 <code>handler.postDelay()</code> 休眠，而delay时间就是ANR的阈值，delay到期后判断主线程是否确实收到消息。</p>
+<h4 id="微信的解决方案">微信的解决方案</h4>
+<p><a href="https://cloud.tencent.com/developer/article/1848945" target="_blank" rel="noopener noreffer">腾讯Matrix for Android对ANR监控的原理</a></p>
+<blockquote>
+<p>看完这篇文章，让我深深的认识到了什么是差距，什么是价值。</p>
+</blockquote></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2021-08-04</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="#" onclick="return false;" title="分享到 Twitter" data-sharer="twitter" data-url="https://vee-zhang.github.io/anr%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" data-title="ANR问题解决" data-hashtags="Android,性能优化"><i class="fab fa-twitter fa-fw"></i></a><a href="#" onclick="return false;" title="分享到 Facebook" data-sharer="facebook" data-url="https://vee-zhang.github.io/anr%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" data-hashtag="Android"><i class="fab fa-facebook-square fa-fw"></i></a><a href="#" onclick="return false;" title="分享到 Instapaper" data-sharer="instapaper" data-url="https://vee-zhang.github.io/anr%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" data-title="ANR问题解决" data-description=""><i data-svg-src="/lib/simple-icons/icons/instapaper.min.svg"></i></a><a href="#" onclick="return false;" title="分享到 微博" data-sharer="weibo" data-url="https://vee-zhang.github.io/anr%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/" data-title="ANR问题解决" data-ralateuid="xxxx"><i class="fab fa-weibo fa-fw"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a></section>
+        <section>
+            <span><a href="#" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/ui%E5%8D%A1%E9%A1%BF%E4%BC%98%E5%8C%96/" class="prev" rel="prev" title="UI卡顿与布局优化"><i class="fas fa-angle-left fa-fw"></i>UI卡顿与布局优化</a>
+            <a href="/%E7%94%B5%E9%87%8F%E4%BC%98%E5%8C%96/" class="next" rel="next" title="电量优化">电量优化<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+<div id="comments"><div id="twikoo"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://twikoo.js.org/">Twikoo</a>.
+            </noscript></div></article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.104.3">Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreffer" title="DoIt 0.2.10"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2021 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://github.com/vee-zhang" target="_blank" rel="noopener noreferrer">Vee Zhang</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div><script>
+                    if('serviceWorker' in navigator) {
+                        navigator.serviceWorker
+                            .register('/sw.min.js', { scope: '/' })
+                            .then(function(registration) {
+                                
+                            });
+                
+                        navigator.serviceWorker
+                            .ready
+                            .then(function(registration) {
+                                
+                            });
+                    }
+                </script></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/algoliasearch/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/topbar/topbar.min.js"></script><script type="text/javascript" src="/lib/pjax/pjax.min.js"></script><script type="text/javascript" src="/js/theme.min.js"></script></div>
+
+<div class="pjax-assets"><script type="text/javascript" src="/lib/twikoo/twikoo.all.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{"twikoo":{"el":"#twikoo","envId":"https://doit-docs-comment-twikoo.vercel.app/","lang":"zh-cn"}},"search":{"algoliaAppID":"5YGRNRQK1G","algoliaIndex":"zh_cn_index","algoliaSearchKey":"0ff6874805de24b84aa1d5ebccad56cd","highlightTag":"em","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"algolia"},"sharerjs":true};</script></div>
+</body>
+
+</html>

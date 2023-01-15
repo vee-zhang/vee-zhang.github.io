@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noodp" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title class="pjax-title">树莓派挂载移动硬盘 - Vee&#39;s space</title><meta name="Description" content="关于 DoIt 主题"><meta property="og:title" content="树莓派挂载移动硬盘" />
+<meta property="og:description" content="过年这几天鼓捣一下树莓派，结果各种麻烦。。。尤其是在挂载exFat格式的移动硬盘的时候，明明临时挂载是没有问题的，但是一旦做了开机自动挂载的话，就连系统都启动不了了。经过不懈的百度，终于解决了问题，特此记录一下。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://vee-zhang.github.io/%E6%A0%91%E8%8E%93%E6%B4%BE%E6%8C%82%E8%BD%BD%E7%A7%BB%E5%8A%A8%E7%A1%AC%E7%9B%98/" /><meta property="og:image" content="https://vee-zhang.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-01-17T17:13:10+08:00" />
+<meta property="article:modified_time" content="2022-01-17T17:13:10+08:00" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://vee-zhang.github.io/logo.png"/>
+
+<meta name="twitter:title" content="树莓派挂载移动硬盘"/>
+<meta name="twitter:description" content="过年这几天鼓捣一下树莓派，结果各种麻烦。。。尤其是在挂载exFat格式的移动硬盘的时候，明明临时挂载是没有问题的，但是一旦做了开机自动挂载的话，就连系统都启动不了了。经过不懈的百度，终于解决了问题，特此记录一下。"/>
+<meta name="application-name" content="Vee&#39;s space">
+<meta name="apple-mobile-web-app-title" content="Vee&#39;s space">
+
+<meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://vee-zhang.github.io/%E6%A0%91%E8%8E%93%E6%B4%BE%E6%8C%82%E8%BD%BD%E7%A7%BB%E5%8A%A8%E7%A1%AC%E7%9B%98/" /><link rel="prev" href="https://vee-zhang.github.io/linux%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84/" /><link rel="next" href="https://vee-zhang.github.io/%E6%A0%91%E8%8E%93%E6%B4%BE%E5%AE%89%E8%A3%85docker-compose/" /><link rel="stylesheet" href="/lib/normalize/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/fontawesome-free/all.min.css">
+    <noscript><link rel="stylesheet" href="/lib/fontawesome-free/all.min.css"></noscript><link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="/lib/animate/animate.min.css">
+    <noscript><link rel="stylesheet" href="/lib/animate/animate.min.css"></noscript><meta name="google-site-verification" content="MQ8DNu27ayX6B_4ObiEDK09vGr1fdy7kOAnbd09hJk4" /><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "树莓派挂载移动硬盘",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/vee-zhang.github.io\/%E6%A0%91%E8%8E%93%E6%B4%BE%E6%8C%82%E8%BD%BD%E7%A7%BB%E5%8A%A8%E7%A1%AC%E7%9B%98\/"
+        },"image": ["https:\/\/vee-zhang.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","wordcount":  2093 ,
+        "url": "https:\/\/vee-zhang.github.io\/%E6%A0%91%E8%8E%93%E6%B4%BE%E6%8C%82%E8%BD%BD%E7%A7%BB%E5%8A%A8%E7%A1%AC%E7%9B%98\/","datePublished": "2022-01-17T17:13:10+08:00","dateModified": "2022-01-17T17:13:10+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "xxxx","logo": {
+                    "@type": "ImageObject",
+                    "url": "https:\/\/vee-zhang.github.io\/images\/avatar.webp",
+                    "width":  528 ,
+                    "height":  560 
+                }},"author": {
+                "@type": "Person",
+                "name": "Vee Zhang"
+            },"description": ""
+    }
+    </script></head>
+
+<body header-desktop="fixed" header-mobile="auto"><script type="text/javascript">
+        function setTheme(theme) {document.body.setAttribute('theme', theme);}
+        function saveTheme(theme) {window.localStorage && localStorage.setItem('theme', theme);}
+        function getMeta(metaName) {const metas = document.getElementsByTagName('meta'); for (let i = 0; i < metas.length; i++) if (metas[i].getAttribute('name') === metaName) return metas[i]; return '';}
+        if (window.localStorage && localStorage.getItem('theme')) {let theme = localStorage.getItem('theme');theme === 'light' || theme === 'dark' || theme === 'black' ? setTheme(theme) : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light')); } else { if ('auto' === 'light' || 'auto' === 'dark' || 'auto' === 'black') setTheme('auto'), saveTheme('auto'); else saveTheme('auto'), window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? setTheme('dark') : setTheme('light');}
+        let themeColorMeta = getMeta('theme-color');
+        if (document.body.getAttribute('theme') != 'light') themeColorMeta.content = '#000000';
+    </script>
+    <div id="back-to-top"></div>
+    <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Vee&#39;s space"><span class="header-title-pre"><i class='far fa-edit fa-fw'></i></span>Vee&#39;s space</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 所有文章 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/series/"> 系列 </a><a class="menu-item" href="/about/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="#" onclick="return false;" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="#" onclick="return false;" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </span><a href="#" onclick="return false;" class="menu-item theme-select" title="切换主题">
+                    <i class="fas fa-adjust fa-fw"></i>
+                    <select class="color-theme-select" id="theme-select-desktop" title="切换主题">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                        <option value="black">黑色</option>
+                        <option value="auto">跟随系统</option>
+                    </select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Vee&#39;s space"><span class="header-title-pre"><i class='far fa-edit fa-fw'></i></span>Vee&#39;s space</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="#" onclick="return false;" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw"></i>
+                        </a>
+                        <a href="#" onclick="return false;" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin"></i>
+                        </span>
+                    </div>
+                    <a href="#" onclick="return false;" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">所有文章</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/series/" title="">系列</a><a class="menu-item" href="/about/" title="">关于</a><a href="#" onclick="return false;" class="menu-item theme-select" title="切换主题">
+                <i class="fas fa-adjust fa-fw"></i>
+                <select class="color-theme-select" id="theme-select-mobile" title="切换主题">
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
+                    <option value="black">黑色</option>
+                    <option value="auto">跟随系统</option>
+                </select>
+            </a></div>
+    </div>
+</header>
+<div class="search-dropdown desktop">
+    <div id="search-dropdown-desktop"></div>
+</div>
+<div class="search-dropdown mobile">
+    <div id="search-dropdown-mobile"></div>
+</div>
+<main class="main">
+            <div class="container"><div class="toc" id="toc-auto">
+        <h2 class="toc-title">目录</h2>
+        <div class="toc-content" id="toc-content-auto"></div>
+    </div><script>document.getElementsByTagName("main")[0].setAttribute("pageStyle", "wide")</script><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC", "true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">树莓派挂载移动硬盘</h1><div class="post-meta">
+            <div class="post-meta-line">
+                <span class="post-author"><a href="https://github.com/vee-zhang" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="author fas fa-user-circle fa-fw"></i>Vee Zhang</a>
+                </span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime="2022-01-17">2022-01-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 2093 字&nbsp;
+                <i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 5 分钟&nbsp;<span id="/%E6%A0%91%E8%8E%93%E6%B4%BE%E6%8C%82%E8%BD%BD%E7%A7%BB%E5%8A%A8%E7%A1%AC%E7%9B%98/" class="leancloud_visitors" data-flag-title="树莓派挂载移动硬盘">
+                        <i class="far fa-eye fa-fw"></i>&nbsp;<span class=leancloud-visitors-count id=twikoo_visitors></span>&nbsp;次阅读
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#创建挂载点">创建挂载点</a></li>
+        <li><a href="#临时挂载硬盘">临时挂载硬盘</a>
+          <ul>
+            <li><a href="#查询硬盘信息">查询硬盘信息</a></li>
+            <li><a href="#临时挂载">临时挂载</a></li>
+            <li><a href="#查询挂载情况">查询挂载情况</a></li>
+          </ul>
+        </li>
+        <li><a href="#开机自动挂载">开机自动挂载</a>
+          <ul>
+            <li><a href="#查询硬盘身份信息">查询硬盘身份信息</a></li>
+            <li><a href="#修改系统配置文件">修改系统配置文件</a></li>
+            <li><a href="#测试一下">测试一下</a></li>
+            <li><a href="#重启">重启</a></li>
+          </ul>
+        </li>
+        <li><a href="#挂载到普通用户">挂载到普通用户</a>
+          <ul>
+            <li><a href="#查询当前挂载到的用户">查询当前挂载到的用户</a></li>
+            <li><a href="#查看当前普通用户的身份信息">查看当前普通用户的身份信息</a></li>
+            <li><a href="#临时挂载-1">临时挂载</a></li>
+            <li><a href="#开机自动挂载到目标用户">开机自动挂载到目标用户</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>过年这几天鼓捣一下树莓派，结果各种麻烦。。。尤其是在挂载exFat格式的移动硬盘的时候，明明临时挂载是没有问题的，但是一旦做了开机自动挂载的话，就连系统都启动不了了。经过不懈的百度，终于解决了问题，特此记录一下。</p>
+<h3 id="创建挂载点">创建挂载点</h3>
+<p>首先要创建挂载点，其实就是创建个文件夹，移动硬盘会挂载到这个文件夹，比如我创建了一个<code>/mnt/servicedisk</code>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo mkdir /mnt/servicedisk
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>然后再授权：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">sudo chmod 777 /mnt/servicedisk
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>目前了解到linux有两个目录比较适合挂载移动硬盘，一个是「media」，适合挂载外部多媒体驱动，一个是「mnt」，适合挂载外部储存设备。</p>
+</blockquote>
+<h3 id="临时挂载硬盘">临时挂载硬盘</h3>
+<p>为了测试硬盘是否可用，需要先临时挂载一下。</p>
+<h4 id="查询硬盘信息">查询硬盘信息</h4>
+<p>通过下面的命令查询当前的所有硬盘信息：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo fdisk -l
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>返回信息如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">pi@raspberrypi:~ $ sudo fdisk -l
+</span></span><span class="line"><span class="cl">Disk /dev/ram0: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram1: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram2: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram3: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram4: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram5: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram6: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram7: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram8: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram9: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram10: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram11: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram12: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram13: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram14: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/ram15: 4 MiB, 4194304 bytes, 8192 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/mmcblk0: 119.3 GiB, 128094044160 bytes, 250183680 sectors
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 512 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 512 bytes / 512 bytes
+</span></span><span class="line"><span class="cl">Disklabel type: dos
+</span></span><span class="line"><span class="cl">Disk identifier: 0x9dddeedf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Device         Boot  Start       End   Sectors  Size Id Type
+</span></span><span class="line"><span class="cl">/dev/mmcblk0p1        8192    532479    524288  256M  c W95 FAT32 (LBA)
+</span></span><span class="line"><span class="cl">/dev/mmcblk0p2      532480 250183679 249651200  119G 83 Linux
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Disk /dev/sda: 465.76 GiB, 500107862016 bytes, 976773168 sectors
+</span></span><span class="line"><span class="cl">Disk model: HDD             
+</span></span><span class="line"><span class="cl">Units: sectors of 1 * 512 = 512 bytes
+</span></span><span class="line"><span class="cl">Sector size (logical/physical): 512 bytes / 512 bytes
+</span></span><span class="line"><span class="cl">I/O size (minimum/optimal): 512 bytes / 512 bytes
+</span></span><span class="line"><span class="cl">Disklabel type: gpt
+</span></span><span class="line"><span class="cl">Disk identifier: 2C9DFE05-186E-4911-B369-1CED62B9A27D
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Device      Start       End   Sectors   Size Type
+</span></span><span class="line"><span class="cl">/dev/sda1      40    409639    409600   200M EFI System
+</span></span><span class="line"><span class="cl">/dev/sda2  411648 976773119 976361472 465.6G Microsoft basic data
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在最下面的<code>Device</code>一栏就是外部链接的存储设备了，我目前只接了一块忆捷的移动硬盘，它自带两个分区：</p>
+<ul>
+<li>/dev/sda1，移动硬盘自带的引导分区，仅有40M，不能被格式化，不能删除。</li>
+<li>/dev/sda2，真正的内容储存空间。</li>
+</ul>
+<p>接下来我就要挂载这个<code>/dev/sda2</code>了。</p>
+<h4 id="临时挂载">临时挂载</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">sudo mount /dev/sda2 /mnt/servicedisk
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">ls /mnt/servicedisk
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果ls命令没有报错，那么就表示临时挂载成功！</p>
+<h4 id="查询挂载情况">查询挂载情况</h4>
+<p>可以使用<code>df -h</code>命令查询挂载情况，可以看到<code>/dev/sda2</code>已经成功挂载到了对应的挂载点，</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">pi@raspberrypi:~ $ df -h
+</span></span><span class="line"><span class="cl">Filesystem      Size  Used Avail Use% Mounted on
+</span></span><span class="line"><span class="cl">/dev/root       118G  1.4G  112G   2% /
+</span></span><span class="line"><span class="cl">devtmpfs        1.7G     0  1.7G   0% /dev
+</span></span><span class="line"><span class="cl">tmpfs           1.9G     0  1.9G   0% /dev/shm
+</span></span><span class="line"><span class="cl">tmpfs           760M  852K  759M   1% /run
+</span></span><span class="line"><span class="cl">tmpfs           5.0M  4.0K  5.0M   1% /run/lock
+</span></span><span class="line"><span class="cl">/dev/mmcblk0p1  253M   31M  222M  13% /boot
+</span></span><span class="line"><span class="cl">/dev/sda2       466G   11M  466G   1% /mnt/servicedisk
+</span></span><span class="line"><span class="cl">tmpfs           380M     0  380M   0% /run/user/1000
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="开机自动挂载">开机自动挂载</h3>
+<h4 id="查询硬盘身份信息">查询硬盘身份信息</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">$ sudo blkid /dev/sda2
+</span></span><span class="line"><span class="cl">/dev/sda2: <span class="nv">LABEL</span><span class="o">=</span><span class="s2">&#34;servicedisk&#34;</span> <span class="nv">UUID</span><span class="o">=</span><span class="s2">&#34;6201-451A&#34;</span> <span class="nv">BLOCK_SIZE</span><span class="o">=</span><span class="s2">&#34;512&#34;</span> <span class="nv">TYPE</span><span class="o">=</span><span class="s2">&#34;exfat&#34;</span> <span class="nv">PARTUUID</span><span class="o">=</span><span class="s2">&#34;ae27284a-b254-4bde-8a55-7457c694a22a&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="修改系统配置文件">修改系统配置文件</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo nano /etc/fstab
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>打开后是这样子：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">PARTUUID=9dddeedf-01  /boot           vfat    defaults          0       2
+</span></span><span class="line"><span class="cl">PARTUUID=9dddeedf-02  /               ext4    defaults,noatime  0       1
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># 在最后添加自己的移动硬盘信息
+</span></span><span class="line"><span class="cl">PARTUUID=ae27284a-b254-4bde-8a55-7457c694a22a  /mnt/servicedisk  auto umask=0000  0  0
+</span></span><span class="line"><span class="cl"># a swapfile is not a swap partition, no line here
+</span></span><span class="line"><span class="cl">#   use  dphys-swapfile swap[on|off]  for that
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>然后<code>control O</code>保存,<code>control x</code>退出。</p>
+<p>坑就在这里了，网上很多帖子是用UUID或者用LEBAL，然后后面的格式用<code>exfat</code>或者<code>vfat</code>，我实测下来都失败了，重启之后ssh都连不上了。所以**这里一定要用<code>PARTUUID</code>和<code>auto</code>，后面还要跟<code>umask=0000</code>，四个🥚表示所有用户都有读写运行权限。</p>
+<h4 id="测试一下">测试一下</h4>
+<p>最后还要测试一下，以免重启之后ssh连不上就悲剧了，只能再重新烧录系统了。（🤦‍♂️我就因为上一步没配置对导致烧录了N遍系统）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo mount -a
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="重启">重启</h4>
+<p>这个就不用说了。</p>
+<h3 id="挂载到普通用户">挂载到普通用户</h3>
+<p>在linux上，移动硬盘会默认挂载到root，而且里面的所有文件都是归属到root的，不支持修改。</p>
+<p>这就麻烦了，因为我们日常操作都是以普通用户身份进行的，甚至有些第三方软件禁止以root身份运行，比如我最近在搞的<code>Gitea</code>。</p>
+<h4 id="查询当前挂载到的用户">查询当前挂载到的用户</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">$ ls -l
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">-rwxr-xr-x <span class="m">1</span> root root    <span class="m">808</span> Feb  <span class="m">8</span> 15:48 docker-compose.yml
+</span></span><span class="line"><span class="cl">drwxr-xr-x <span class="m">5</span> root root <span class="m">131072</span> Feb  <span class="m">8</span> 13:53 gitea
+</span></span><span class="line"><span class="cl">drwxr-xr-x <span class="m">2</span> root root <span class="m">131072</span> Feb  <span class="m">8</span> 15:48 mysql
+</span></span><span class="line"><span class="cl">drwxr-xr-x <span class="m">2</span> root root <span class="m">131072</span> Feb  <span class="m">8</span> 15:28 <span class="nb">test</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="查看当前普通用户的身份信息">查看当前普通用户的身份信息</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">$id
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">uid=1000(pi) gid=1000(pi) groups=1000(pi),4(adm),20(dialout),24(cdrom),27(sudo),29(audio),44(video),46(plugdev),60(games),100(users),105(input),107(render),109(netdev),995(docker),997(gpio),998(i2c),999(spi)
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以看到：</p>
+<ul>
+<li>当前用户的uid是1000</li>
+<li>当前用户的gid(用户组id)是1000</li>
+<li>docker的用户组id是995</li>
+</ul>
+<h4 id="临时挂载-1">临时挂载</h4>
+<p>首先卸载硬盘</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo umount /dev/sda2
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>再重新挂载</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">sudo mount /dev/sda2 service -o <span class="nv">uid</span><span class="o">=</span><span class="nv">$id</span> <span class="nv">gid</span><span class="o">=</span><span class="m">995</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>然后再次<code>ls -l</code>查询挂载点，就发现已经挂载到普通用户了。</p>
+<h4 id="开机自动挂载到目标用户">开机自动挂载到目标用户</h4>
+<p>同理，开机自动挂载就是在之前的基础上添加两个参数：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="nv">PARTUUID</span><span class="o">=</span>ae27284a-b254-4bde-8a55-7457c694a22a  /mnt/servicedisk  auto <span class="nv">umask</span><span class="o">=</span>0000,uid<span class="o">=</span>1000,gid<span class="o">=</span><span class="m">995</span>  <span class="m">0</span>  <span class="m">0</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>配置完可以重启试一下，在树莓派64位系统上实测是成功的。</p></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2022-01-17</span>
+            </div>
+            <div class="post-info-license"></div>
+        </div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="#" onclick="return false;" title="分享到 Twitter" data-sharer="twitter" data-url="https://vee-zhang.github.io/%E6%A0%91%E8%8E%93%E6%B4%BE%E6%8C%82%E8%BD%BD%E7%A7%BB%E5%8A%A8%E7%A1%AC%E7%9B%98/" data-title="树莓派挂载移动硬盘"><i class="fab fa-twitter fa-fw"></i></a><a href="#" onclick="return false;" title="分享到 Facebook" data-sharer="facebook" data-url="https://vee-zhang.github.io/%E6%A0%91%E8%8E%93%E6%B4%BE%E6%8C%82%E8%BD%BD%E7%A7%BB%E5%8A%A8%E7%A1%AC%E7%9B%98/"><i class="fab fa-facebook-square fa-fw"></i></a><a href="#" onclick="return false;" title="分享到 Instapaper" data-sharer="instapaper" data-url="https://vee-zhang.github.io/%E6%A0%91%E8%8E%93%E6%B4%BE%E6%8C%82%E8%BD%BD%E7%A7%BB%E5%8A%A8%E7%A1%AC%E7%9B%98/" data-title="树莓派挂载移动硬盘" data-description=""><i data-svg-src="/lib/simple-icons/icons/instapaper.min.svg"></i></a><a href="#" onclick="return false;" title="分享到 微博" data-sharer="weibo" data-url="https://vee-zhang.github.io/%E6%A0%91%E8%8E%93%E6%B4%BE%E6%8C%82%E8%BD%BD%E7%A7%BB%E5%8A%A8%E7%A1%AC%E7%9B%98/" data-title="树莓派挂载移动硬盘" data-ralateuid="xxxx"><i class="fab fa-weibo fa-fw"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="#" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/linux%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84/" class="prev" rel="prev" title="linux目录结构"><i class="fas fa-angle-left fa-fw"></i>linux目录结构</a>
+            <a href="/%E6%A0%91%E8%8E%93%E6%B4%BE%E5%AE%89%E8%A3%85docker-compose/" class="next" rel="next" title="树莓派安装docker-compose">树莓派安装docker-compose<i class="fas fa-angle-right fa-fw"></i></a></div>
+</div>
+<div id="comments"><div id="twikoo"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://twikoo.js.org/">Twikoo</a>.
+            </noscript></div></article></div>
+        </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">由 <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.104.3">Hugo</a> 强力驱动 | 主题 - <a href="https://github.com/HEIGE-PCloud/DoIt" target="_blank" rel="noopener noreffer" title="DoIt 0.2.10"><i class="far fa-edit fa-fw"></i> DoIt</a>
+                </div><div class="footer-line"><i class="far fa-copyright fa-fw"></i><span itemprop="copyrightYear">2021 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://github.com/vee-zhang" target="_blank" rel="noopener noreferrer">Vee Zhang</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div><script>
+                    if('serviceWorker' in navigator) {
+                        navigator.serviceWorker
+                            .register('/sw.min.js', { scope: '/' })
+                            .then(function(registration) {
+                                
+                            });
+                
+                        navigator.serviceWorker
+                            .ready
+                            .then(function(registration) {
+                                
+                            });
+                    }
+                </script></footer></div>
+
+    <div id="fixed-buttons"><a href="#back-to-top" id="back-to-top" class="fixed-button" title="回到顶部">
+            <i class="fas fa-arrow-up fa-fw"></i>
+        </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+            <i class="fas fa-comment fa-fw"></i>
+        </a>
+    </div><div class="assets"><script type="text/javascript" src="/lib/autocomplete/autocomplete.min.js"></script><script type="text/javascript" src="/lib/algoliasearch/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="/lib/lazysizes/lazysizes.min.js"></script><script type="text/javascript" src="/lib/topbar/topbar.min.js"></script><script type="text/javascript" src="/lib/pjax/pjax.min.js"></script><script type="text/javascript" src="/js/theme.min.js"></script></div>
+
+<div class="pjax-assets"><script type="text/javascript" src="/lib/twikoo/twikoo.all.min.js"></script><script type="text/javascript" src="/lib/clipboard/clipboard.min.js"></script><script type="text/javascript" src="/lib/sharer/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":10},"comment":{"twikoo":{"el":"#twikoo","envId":"https://doit-docs-comment-twikoo.vercel.app/","lang":"zh-cn"}},"search":{"algoliaAppID":"5YGRNRQK1G","algoliaIndex":"zh_cn_index","algoliaSearchKey":"0ff6874805de24b84aa1d5ebccad56cd","highlightTag":"em","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"algolia"},"sharerjs":true};</script></div>
+</body>
+
+</html>

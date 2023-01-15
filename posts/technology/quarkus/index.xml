@@ -1,0 +1,15 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>所有文章 - Vee&#39;s space</title>
+        <link>https://vee-zhang.github.io/posts/technology/quarkus/</link>
+        <description>所有文章 | Vee&#39;s space</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>vee.night@qq.com (Vee Zhang)</managingEditor>
+            <webMaster>vee.night@qq.com (Vee Zhang)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><atom:link href="https://vee-zhang.github.io/posts/technology/quarkus/" rel="self" type="application/rss+xml" /><item>
+    <title>Quarkus读取配置</title>
+    <link>https://vee-zhang.github.io/quarkus%E8%AF%BB%E5%8F%96%E9%85%8D%E7%BD%AE/</link>
+    <pubDate>Tue, 07 Sep 2021 17:45:01 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/quarkus%E8%AF%BB%E5%8F%96%E9%85%8D%E7%BD%AE/</guid>
+    <description><![CDATA[<p>quarkus可以从.properties文件中读取配置。</p>]]></description>
+</item></channel>
+</rss>

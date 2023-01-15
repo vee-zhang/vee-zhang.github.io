@@ -1,0 +1,57 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>所有文章 - Vee&#39;s space</title>
+        <link>https://vee-zhang.github.io/posts/technology/android/framework/</link>
+        <description>所有文章 | Vee&#39;s space</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>vee.night@qq.com (Vee Zhang)</managingEditor>
+            <webMaster>vee.night@qq.com (Vee Zhang)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><atom:link href="https://vee-zhang.github.io/posts/technology/android/framework/" rel="self" type="application/rss+xml" /><item>
+    <title>AMS</title>
+    <link>https://vee-zhang.github.io/ams/</link>
+    <pubDate>Mon, 09 Aug 2021 15:48:25 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/ams/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>Android虚拟机</title>
+    <link>https://vee-zhang.github.io/android%E8%99%9A%E6%8B%9F%E6%9C%BA/</link>
+    <pubDate>Mon, 09 Aug 2021 13:51:36 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/android%E8%99%9A%E6%8B%9F%E6%9C%BA/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>Android系统启动流程</title>
+    <link>https://vee-zhang.github.io/android%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/</link>
+    <pubDate>Wed, 28 Jul 2021 16:15:50 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/android%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/</guid>
+    <description><![CDATA[xxxx什么垃圾玩意儿，看的头疼]]></description>
+</item><item>
+    <title>Android应用启动过程</title>
+    <link>https://vee-zhang.github.io/android%E5%BA%94%E7%94%A8%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/</link>
+    <pubDate>Tue, 27 Jul 2021 14:46:26 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/android%E5%BA%94%E7%94%A8%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/</guid>
+    <description><![CDATA[在Android中，启动一个程序，分为【进程启动】和【Activity启动两部分】。]]></description>
+</item><item>
+    <title>Android系统架构</title>
+    <link>https://vee-zhang.github.io/android%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84/</link>
+    <pubDate>Tue, 27 Jul 2021 13:51:13 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/android%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84/</guid>
+    <description><![CDATA[]]></description>
+</item><item>
+    <title>Android页面绘制流程</title>
+    <link>https://vee-zhang.github.io/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/</link>
+    <pubDate>Mon, 26 Jul 2021 16:06:05 &#43;0800</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/</guid>
+    <description><![CDATA[Window Activity、Window、DecorView三者一一对应。 Window的分类 普通window，z轴范围1~99； 子window，z轴]]></description>
+</item><item>
+    <title>View事件体系</title>
+    <link>https://vee-zhang.github.io/view%E4%BA%8B%E4%BB%B6%E4%BD%93%E7%B3%BB/</link>
+    <pubDate>Mon, 22 Mar 2021 08:55:28 &#43;0000</pubDate><author>
+        <name>Vee Zhang</name>
+    </author><guid>https://vee-zhang.github.io/view%E4%BA%8B%E4%BB%B6%E4%BD%93%E7%B3%BB/</guid>
+    <description><![CDATA[位置参数 主要位置参数 View的位置主要由它的四个顶点(相对父容器)来决定： getLeft() getTop() getRight() getBottom() 用于移动的参数 x/y View左上角相对父容器的坐标； translationX/translationY View]]></description>
+</item></channel>
+</rss>
