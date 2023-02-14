@@ -1,8 +1,8 @@
 ---
 weight: 3
 title: "Theme Documentation - Built-in Shortcodes"
-date: 2020-03-04T16:29:41+08:00
-lastmod: 2020-03-04T16:29:41+08:00
+date: 2020-03-05T16:29:41+08:00
+lastmod: 2020-03-05T16:29:41+08:00
 draft: false
 authors: ["Dillon", "PCloud"]
 description: "Hugo provides multiple built-in shortcodes for author convenience and to keep your markdown content clean."
@@ -11,7 +11,7 @@ featuredImage: "featured-image.webp"
 tags: ["shortcodes"]
 categories: ["documentation"]
 series: ["getting-start"]
-
+series_weight: 3
 lightgallery: true
 ---
 
@@ -28,7 +28,7 @@ A shortcode is a simple snippet that can generate reasonable HTML code and confo
 
 Hugo ships with a set of predefined shortcodes that represent very common usage. These shortcodes are provided for author convenience and to keep your markdown content clean.
 
-## 1 figure {#figure}
+## figure {#figure}
 
 [Documentation of `figure`](https://gohugo.io/content-management/shortcodes#figure)
 
@@ -53,7 +53,7 @@ The HTML looks like this:
 </figure>
 ```
 
-## 2 gist
+## gist
 
 [Documentation of `gist`](https://gohugo.io/content-management/shortcodes#gist)
 
@@ -73,7 +73,7 @@ The HTML looks like this:
 <script type="application/javascript" src="https://gist.github.com/spf13/7896402.js"></script>
 ```
 
-## 3 highlight
+## highlight
 
 [Documentation of `highlight`](https://gohugo.io/content-management/shortcodes#highlight)
 
@@ -105,7 +105,7 @@ The rendered output looks like this:
 </section>
 {{< /highlight >}}
 
-## 4 param
+## param
 
 [Documentation of `param`](https://gohugo.io/content-management/shortcodes#param)
 
@@ -119,25 +119,23 @@ The rendered output looks like this:
 
 {{< param description >}}
 
-## 5 ref and relref {#ref-and-relref}
+## ref and relref {#ref-and-relref}
 
 [Documentation of `ref` and `relref`](https://gohugo.io/content-management/shortcodes#ref-and-relref)
 
-## 6 tweet
+## tweet
 
 [Documentation of `tweet`](https://gohugo.io/content-management/shortcodes#tweet)
 
 Example `tweet` input:
 
 ```markdown
-{{</* tweet 877500564405444608 */>}}
+{{</* tweet user="SanDiegoZoo" id="1453110110599868418" */>}}
 ```
 
-The rendered output looks like this:
+{{< tweet user="SanDiegoZoo" id="1453110110599868418" >}}
 
-{{< tweet 877500564405444608 >}}
-
-## 7 vimeo
+## vimeo
 
 [Documentation of `vimeo`](https://gohugo.io/content-management/shortcodes#vimeo)
 
@@ -151,7 +149,7 @@ The rendered output looks like this:
 
 {{< vimeo 146022717 >}}
 
-## 8 youtube
+## youtube
 
 [Documentation of `youtube`](https://gohugo.io/content-management/shortcodes#youtube)
 

@@ -1,11 +1,10 @@
 ---
 weight: 4
 title: "Theme Documentation - Extended Shortcodes"
-date: 2020-03-03T16:29:41+08:00
-lastmod: 2020-03-03T16:29:41+08:00
+date: 2020-03-06T16:29:41+08:00
+lastmod: 2020-03-06T16:29:41+08:00
 draft: false
-author: "Dillon"
-authorLink: "https://dillonzq.com"
+authors: [Dillon, PCloud]
 description: "DoIt theme provides multiple shortcodes on top of built-in ones in Hugo."
 resources:
 featuredImage: "featured-image.webp"
@@ -14,7 +13,7 @@ featuredImagePreview: "featured-image-preview.webp"
 tags: ["shortcodes"]
 categories: ["documentation"]
 series: ["getting-start"]
-
+series_weight: 4
 lightgallery: true
 math:
   enable: true
@@ -24,7 +23,7 @@ math:
 
 <!--more-->
 
-## 1 style
+## style
 
 {{< version 0.2.0 changed >}}
 
@@ -40,7 +39,7 @@ The **first** one is the custom style content,
 which supports nesting syntax in [:(fab fa-sass fa-fw): SASS](https://sass-lang.com/documentation/style-rules/declarations#nesting)
 and `&` referring to this parent HTML element.
 
-And the **second** one is the tag name of the HTML element wrapping the content you want to change style, and whose default value is `div`.
+And the **second** one is the tag name of the HTML element wrapping the content you want to change the style, and whose default value is `div`.
 
 Example `style` input:
 
@@ -56,7 +55,7 @@ The rendered output looks like this:
 This is a **right-aligned** paragraph.
 {{< /style >}}
 
-## 2 link
+## link
 
 {{< version 0.2.0 >}}
 
@@ -72,7 +71,7 @@ The `link` shortcode has the following named parameters:
 
 * **content** *[optional]* (**second** positional parameter)
 
-    Content of the link, default value is the value of **href** parameter.
+    Content of the link, the default value is the value of **href** parameter.
 
     *Markdown or HTML format is supported.*
 
@@ -122,11 +121,11 @@ The rendered output looks like this (hover over the link, there should be a tool
 
 {{< link "https://github.com/upstage/" Upstage "Visit Upstage!" >}}
 
-## 3 image {#image}
+## image {#image}
 
 {{< version 0.2.0 changed >}}
 
-`image` shortcode is an alternative to [`figure` shortcode](../theme-documentation-built-in-shortcodes#figure). `image` shortcode can take full advantage of the dependent libraries of [lazysizes](https://github.com/aFarkas/lazysizes) and [lightgallery.js](https://github.com/sachinchoolur/lightgallery.js).
+`image` shortcode is an alternative to [`figure` shortcode](../theme-documentation-built-in-shortcodes#figure). `image` shortcode can take full advantage of the dependent library [lightgallery.js](https://github.com/sachinchoolur/lightgallery.js).
 
 {{< version 0.2.10 >}} The complete usage of [local resource references](../theme-documentation-content#contents-organization) is supported.
 
@@ -138,7 +137,7 @@ The `image` shortcode has the following named parameters:
 
 * **alt** *[optional]* (**second** positional parameter)
 
-    Alternate text for the image if the image cannot be displayed, default value is the value of **src** parameter.
+    Alternate text for the image if the image cannot be displayed, the default value is the value of the **src** parameter.
 
     *Markdown or HTML format is supported.*
 
@@ -158,11 +157,11 @@ The `image` shortcode has the following named parameters:
 
 * **src_s** *[optional]*
 
-    URL of the image thumbnail, used for lightgallery, default value is the value of **src** parameter.
+    URL of the image thumbnail, used for lightgallery, the default value is the value of the **src** parameter.
 
 * **src_l** *[optional]*
 
-    URL of the HD image, used for lightgallery, default value is the value of **src** parameter.
+    URL of the HD image, used for lightgallery, the default value is the value of the **src** parameter.
 
 * **height** *[optional]*
 
@@ -174,7 +173,7 @@ The `image` shortcode has the following named parameters:
 
 * **linked** *[optional]*
 
-    Whether the image needs to be hyperlinked, default value is `true`.
+    Whether the image needs to be hyperlinked, the default value is `true`.
 
 * **rel** *[optional]*
 
@@ -190,9 +189,9 @@ The rendered output looks like this:
 
 {{< image src="/images/lighthouse.webp" caption="Lighthouse (`image`)" src_s="/images/lighthouse-small.webp" src_l="/images/lighthouse-large.webp" >}}
 
-## 4 admonition
+## admonition
 
-The `admonition` shortcode supports **12** types of banners to help you put notice in your page.
+The `admonition` shortcode supports **12** types of banners to help you put a notice on your page.
 
 *Markdown or HTML format in the content is supported.*
 
@@ -248,15 +247,15 @@ The `admonition` shortcode has the following named parameters:
 
 * **type** *[optional]* (**first** positional parameter)
 
-    Type of the `admonition` banner, default value is `note`.
+    Type of the `admonition` banner, the default value is `note`.
 
 * **title** *[optional]* (**second** positional parameter)
 
-    Title of the `admonition` banner, default value is the value of **type** parameter.
+    Title of the `admonition` banner, the default value is the value of the **type** parameter.
 
 * **open** *[optional]* (**third** positional parameter) {{< version 0.2.0 changed >}}
 
-    Whether the content will be expandable by default, default value is `true`.
+    Whether the content will be expandable by default, the default value is `true`.
 
 Example `admonition` input:
 
@@ -276,13 +275,13 @@ The rendered output looks like this:
 A **tip** banner
 {{< /admonition >}}
 
-## 5 mermaid
+## mermaid
 
-[mermaid](https://mermaidjs.github.io/) is a library helping you to generate diagram and flowcharts from text, in a similar manner as Markdown.
+[mermaid](https://mermaidjs.github.io/) is a library helping you to generate diagrams and flowcharts from text, in a similar manner as Markdown.
 
 Just insert your mermaid code in the `mermaid` shortcode and that’s it.
 
-### 5.1 Flowchart {#flowchart}
+### Flowchart {#flowchart}
 
 Example **flowchart** `mermaid` input:
 
@@ -304,7 +303,7 @@ The rendered output looks like this:
     C -->|Two| E[Result two]
 {{< /mermaid >}}
 
-### 5.2 Sequence Diagram {#sequence-diagram}
+### Sequence Diagram {#sequence-diagram}
 
 Example **sequence diagram** `mermaid` input:
 
@@ -338,7 +337,7 @@ The rendered output looks like this:
     Bob-->John: Jolly good!
 {{< /mermaid >}}
 
-### 5.3 GANTT {#gantt}
+### GANTT {#gantt}
 
 Example **GANTT** `mermaid` input:
 
@@ -380,7 +379,7 @@ The rendered output looks like this:
     Add to mermaid                      :1d
 {{< /mermaid >}}
 
-### 5.4 Class Diagram {#class-diagram}
+### Class Diagram {#class-diagram}
 
 Example **class diagram** `mermaid` input:
 
@@ -420,7 +419,7 @@ The rendered output looks like this:
     Class08 <--> C2: Cool label
 {{< /mermaid >}}
 
-### 5.5 State Diagram {#state-diagram}
+### State Diagram {#state-diagram}
 
 Example **state diagram** `mermaid` input:
 
@@ -446,51 +445,104 @@ The rendered output looks like this:
     Crash --> [*]
 {{< /mermaid >}}
 
-### 5.6 Git Graph {#git-graph}
+### Git Graph {#git-graph}
 
 Example **git graph** `mermaid` input:
 
 ```markdown
-{{</* mermaid */>}}gitGraph:
-options
-{
-    "nodeSpacing": 100,
-    "nodeRadius": 10
-}
-end
+{{</* mermaid */>}}gitGraph
     commit
-    branch newbranch
-    checkout newbranch
+    branch hotfix
+    checkout hotfix
     commit
+    branch develop
+    checkout develop
+    commit id:"ash" tag:"abc"
+    branch featureB
+    checkout featureB
+    commit type:HIGHLIGHT
+    checkout main
+    checkout hotfix
+    commit type:NORMAL
+    checkout develop
+    commit type:REVERSE
+    checkout featureB
     commit
-    checkout master
+    checkout main
+    merge hotfix
+    checkout featureB
     commit
+    checkout develop
+    branch featureA
     commit
-    merge newbranch
+    checkout develop
+    merge hotfix
+    checkout featureA
+    commit
+    checkout featureB
+    commit
+    checkout develop
+    merge featureA
+    branch release
+    checkout release
+    commit
+    checkout main
+    commit
+    checkout release
+    merge main
+    checkout develop
+    merge release
 {{</* /mermaid */>}}
 ```
 
 The rendered output looks like this:
 
-{{< mermaid >}}gitGraph:
-options
-{
-    "nodeSpacing": 100,
-    "nodeRadius": 10
-}
-end
+{{< mermaid >}}
+gitGraph
     commit
-    branch newbranch
-    checkout newbranch
+    branch hotfix
+    checkout hotfix
     commit
+    branch develop
+    checkout develop
+    commit id:"ash" tag:"abc"
+    branch featureB
+    checkout featureB
+    commit type:HIGHLIGHT
+    checkout main
+    checkout hotfix
+    commit type:NORMAL
+    checkout develop
+    commit type:REVERSE
+    checkout featureB
     commit
-    checkout master
+    checkout main
+    merge hotfix
+    checkout featureB
     commit
+    checkout develop
+    branch featureA
     commit
-    merge newbranch
+    checkout develop
+    merge hotfix
+    checkout featureA
+    commit
+    checkout featureB
+    commit
+    checkout develop
+    merge featureA
+    branch release
+    checkout release
+    commit
+    checkout main
+    commit
+    checkout release
+    merge main
+    checkout develop
+    merge release
 {{< /mermaid >}}
 
-### 5.7 Pie {#pie}
+### Pie {#pie}
 
 Example **pie** `mermaid` input:
 
@@ -510,7 +562,7 @@ The rendered output looks like this:
     "Rats" : 15
 {{< /mermaid >}}
 
-## 6 echarts
+## echarts
 
 [ECharts](https://echarts.apache.org/) is a library helping you to generate interactive data visualization.
 
@@ -898,7 +950,7 @@ The `echarts` shortcode has also the following named parameters:
 
     {{< version 0.2.0 >}} Height of the data visualization, default value is `30rem`.
 
-## 7 mapbox
+## mapbox
 
 {{< version 0.2.0 >}}
 
@@ -908,19 +960,19 @@ The `mapbox` shortcode has the following named parameters to use Mapbox GL JS:
 
 * **lng** *[required]* (**first** positional parameter)
 
-    Longitude of the inital centerpoint of the map, measured in degrees.
+    Longitude of the initial centerpoint of the map, measured in degrees.
 
 * **lat** *[required]* (**second** positional parameter)
 
-    Latitude of the inital centerpoint of the map, measured in degrees.
+    Latitude of the initial centerpoint of the map, measured in degrees.
 
 * **zoom** *[optional]* (**third** positional parameter)
 
-    The initial zoom level of the map, default value is `10`.
+    The initial zoom level of the map, the default value is `10`.
 
 * **marked** *[optional]* (**fourth** positional parameter)
 
-    Whether to add a marker at the inital centerpoint of the map, default value is `true`.
+    Whether to add a marker at the initial centerpoint of the map, the default value is `true`.
 
 * **light-style** *[optional]* (**fifth** positional parameter)
 
@@ -948,11 +1000,11 @@ The `mapbox` shortcode has the following named parameters to use Mapbox GL JS:
 
 * **width** *[optional]*
 
-    Width of the map, default value is `100%`.
+    Width of the map, the default value is `100%`.
 
 * **height** *[optional]*
 
-    Height of the map, default value is `20rem`.
+    Height of the map, the default value is `20rem`.
 
 Example simple `mapbox` input:
 
@@ -978,13 +1030,13 @@ The rendered output looks like this:
 
 {{< mapbox -122.252 37.453 10 false "mapbox://styles/mapbox/navigation-preview-day-v4?optimize=true" "mapbox://styles/mapbox/navigation-preview-night-v4?optimize=true" >}}
 
-## 8 music
+## music
 
 The `music` shortcode embeds a responsive music player based on [APlayer](https://github.com/MoePlayer/APlayer) and [MetingJS](https://github.com/metowolf/MetingJS).
 
-There are three ways to use it the `music` shortcode.
+There are three ways to use the `music` shortcode.
 
-### 8.1 Custom Music URL {#custom-music-url}
+### Custom Music URL {#custom-music-url}
 
 {{< version 0.2.10 >}} The complete usage of [local resource references](../theme-documentation-content#contents-organization) is supported.
 
@@ -1016,14 +1068,14 @@ The rendered output looks like this:
 
 {{< music url="/music/Wavelength.mp3" name=Wavelength artist=oldmanyoung cover="/images/Wavelength.webp" >}}
 
-### 8.2 Music Platform URL Automatic Identification {#automatic-identification}
+### Music Platform URL Automatic Identification {#automatic-identification}
 
 The `music` shortcode has one named parameter by music platform URL automatic identification:
 
 * **auto** *[required]* (**first** positional parameter)
 
     URL of the music platform URL for automatic identification,
-    which supports `netease`, `tencent` and `xiami` music platform.
+    which supports `netease`, `tencent` and `xiami` music platforms.
 
 Example `music` input by music platform URL automatic identification:
 
@@ -1037,7 +1089,7 @@ The rendered output looks like this:
 
 {{< music auto="https://music.163.com/#/playlist?id=60198" >}}
 
-### 8.3 Custom Server, Type and ID {#custom-server}
+### Custom Server, Type and ID {#custom-server}
 
 The `music` shortcode has the following named parameters by custom music platform:
 
@@ -1069,33 +1121,33 @@ The rendered output looks like this:
 
 {{< music netease song 1868553 >}}
 
-### 8.4 Other Parameters {#other-parameters}
+### Other Parameters {#other-parameters}
 
 The `music` shortcode has other named parameters applying to the above three ways:
 
 * **theme** *[optional]*
 
-    {{< version 0.2.0 changed >}} Main color of the music player, default value is `#448aff`.
+    {{< version 0.2.0 changed >}} the Main colour of the music player, the default value is `#448aff`.
 
 * **fixed** *[optional]*
 
-    Whether to enable fixed mode, default value is `false`.
+    Whether to enable fixed mode, the default value is `false`.
 
 * **mini** *[optional]*
 
-    Whether to enable mini mode, default value is `false`.
+    Whether to enable mini mode, the default value is `false`.
 
 * **autoplay** *[optional]*
 
-    Whether to autoplay music, default value is `false`.
+    Whether to autoplay music, the default value is `false`.
 
 * **volume** *[optional]*
 
-    Default volume when the player is first opened, which will be remembered in the browser, default value is `0.7`.
+    Default volume when the player is first opened, which will be remembered in the browser, the default value is `0.7`.
 
 * **mutex** *[optional]*
 
-    Whether to pause other players when this player starts playing, default value is `true`.
+    Whether to pause other players when this player starts playing, the default value is `true`.
 
 The `music` shortcode has the following named parameters only applying to the type of music list:
 
@@ -1103,23 +1155,60 @@ The `music` shortcode has the following named parameters only applying to the ty
 
     [`all`, `one`, `none`]
 
-    Loop mode of the music list, default value is `none`.
+    Loop mode of the music list, the default value is `none`.
 
 * **order** *[optional]*
 
     [`list`, `random`]
 
-    Play order of the music list, default value is `list`.
+    Play order of the music list, the default value is `list`.
 
 * **list-folded** *[optional]*
 
-    Whether the music list should be folded at first, default value is `false`.
+    Whether the music list should be folded at first, the default value is `false`.
 
 * **list-max-height** *[optional]*
 
-    Max height of the music list, default value is `340px`.
+    Max height of the music list, the default value is `340px`.
 
-## 9 bilibili
+
+## aplayer and audio
+
+{{< version 0.2.14 >}}
+
+If you need more advanced controls (custom playlist, mini mode, custom audio type...) over the music player, you can use the `aplayer` shortcode along with the `audio` shortcode to reach full power of [APlayer.js](https://aplayer.js.org).
+
+The `aplayer` shortcode is used to create an `APlayer` instance, and the `audio` shortcode is used to store data about each music file. Please refer to [APlayer.js documentation](https://aplayer.js.org/#/home?id=options) for all options.
+
+Example `aplayer` and `audio` input:
+
+```markdown
+{{</* aplayer fixed=false mini=false autoplay=false theme="#b7daff" loop="all" order="list" preload="auto" volume=0.7 mutex=true lrcType=1 listFolded=false listMaxHeight="" storageName="aplayer-setting" */>}}
+    {{</* audio name="Wavelength" artist="oldmanyoung" url="/music/Wavelength.mp3" cover="/images/Wavelength.webp" /*/>}}
+    {{</* audio name="Wavelength" artist="oldmanyoung" url="/music/Wavelength.mp3" cover="/images/Wavelength.webp" */>}}
+        [00:00.00]APlayer audio1
+        [00:04.01]is
+        [00:08.02]amazing
+    {{</* /audio */>}}
+{{</* /aplayer */>}}
+```
+
+Example `aplayer` and `audio` output:
+
+{{< aplayer fixed=false mini=false autoplay=false theme="#b7daff" loop="all" order="list" preload="auto" volume=0.7 mutex=true lrcType=1 listFolded=false listMaxHeight="" storageName="aplayer-setting" >}}
+    {{< audio name="Wavelength" artist="oldmanyoung" url="/music/Wavelength.mp3" cover="/images/Wavelength.webp" />}}
+    {{< audio name="Wavelength" artist="oldmanyoung" url="/music/Wavelength.mp3" cover="/images/Wavelength.webp" >}}
+        [00:00.00]APlayer audio1
+        [00:04.01]is
+        [00:08.02]amazing
+    {{< /audio >}}
+{{< /aplayer >}}
+
+Note that these shortcodes cannot be used separately and only named parameters are supported.
+
+If you place the LRC inside the `audio` shortcode, it is passed to the APlayer as a JS string, so the `lrcType` needs to be set to 1. If you set the link to the LRC file through the `lrc` parameter, it will be passed as an LRC file, so the `lrcType` needs to be set to 3.
+
+## bilibili
 
 {{< version 0.2.0 changed >}}
 
@@ -1162,13 +1251,13 @@ The rendered output looks like this:
 
 {{< bilibili id=BV1TJ411C7An p=3 >}}
 
-## 10 typeit
+## typeit
 
 The `typeit` shortcode provides typing animation based on [TypeIt](https://typeitjs.com/).
 
 Just insert your content in the `typeit` shortcode and that’s it.
 
-### 10.1 Simple Content {#simple-content}
+### Simple Content {#simple-content}
 
 Simple content is allowed in `Markdown` format and **without** rich block content such as images and more...
 
@@ -1202,9 +1291,9 @@ The rendered output looks like this:
 This is a *paragraph* with **typing animation** based on [TypeIt](https://typeitjs.com/)...
 {{< /typeit >}}
 
-### 10.2 Code Content {#code-content}
+### Code Content {#code-content}
 
-Code content is allowed and will be highlighted by named parameter `code` for the type of code language.
+Code content is allowed and will be highlighted by the named parameter `code` for the type of code language.
 
 Example `typeit` input with `code`:
 
@@ -1228,7 +1317,7 @@ public class HelloWorld {
 }
 {{< /typeit >}}
 
-### 10.3 Group Content {#group-content}
+### Group Content {#group-content}
 
 All typing animations start at the same time by default.
 But sometimes you may want to start a set of `typeit` contents in order.
@@ -1257,7 +1346,7 @@ The rendered output looks like this:
 **Then** this paragraph begins
 {{< /typeit >}}
 
-## 11 script
+## script
 
 {{< version 0.2.8 >}}
 
@@ -1281,7 +1370,7 @@ You can see the output in the console of the developer tool.
 console.log('Just DoIt!');
 {{< /script >}}
 
-## 12 friend
+## friend
 
 {{< version 0.2.11 >}}
 
@@ -1317,7 +1406,7 @@ The rendered output looks like this:
 
 {{< friend name="PCloud" url="https://github.com/HEIGE-PCloud/" avatar="https://avatars.githubusercontent.com/u/52968553?v=4" bio="This is PCloud~💤" >}}
 
-## 13 showcase
+## showcase
 
 {{< version 0.2.12 >}}
 
@@ -1343,7 +1432,7 @@ The `showcase` shortcode has the following named parameters:
 
 * **column** *[optional]* (**fifth** positional parameter)
 
-    This parameter defines how many showcases in each row. The default value is 2, which means there will have two showcases in each row. You can change it to 1, 2 or 3. It’s important to note that when a user visits the website on a small screen, the number of column may be auto adjusted to provide the best experience.
+    This parameter defines how many showcases are in each row. The default value is 2, which means there will have two showcases in each row. You can change it to 1, 2 or 3. It’s important to note that when a user visits the website on a small screen, the number of the column may be auto-adjusted to provide the best experience.
 
 Example `showcase` input:
 
@@ -1357,7 +1446,7 @@ The rendered output looks like this:
 
 {{< showcase title="Theme Documentation - Basics" summary="Discover what the Hugo - DoIt theme is all about and the core-concepts behind it." image="/theme-documentation-basics/featured-image.webp" link="/theme-documentation-basics" >}}
 
-## 14 math
+## math
 
 {{< version 0.2.12 >}}
 

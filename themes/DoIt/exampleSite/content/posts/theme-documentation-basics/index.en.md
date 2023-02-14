@@ -1,7 +1,7 @@
 ---
 weight: 1
 title: "Theme Documentation - Basics"
-date: 2020-03-06T21:29:01+08:00
+date: 2020-03-03T21:29:01+08:00
 lastmod: 2020-03-06T21:29:01+08:00
 draft: false
 authors: ["Dillon", "PCloud"]
@@ -11,9 +11,9 @@ featuredImage: "featured-image.webp"
 tags: ["installation", "configuration"]
 categories: ["documentation"]
 series: ["getting-start"]
-
+series_weight: 1
 lightgallery: true
-
+license: '<a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a>'
 toc:
   auto: false
 ---
@@ -22,7 +22,7 @@ Discover what the Hugo - **DoIt** theme is all about and the core-concepts behin
 
 <!--more-->
 
-## 1 Requirements
+## Requirements
 
 Thanks to the simplicity of Hugo, [Hugo](https://gohugo.io/) is the only dependency of this theme.
 
@@ -36,11 +36,11 @@ Since [WebP Image Processing](https://gohugo.io/content-management/image-process
 Since some features of this theme need to processes :(fab fa-sass fa-fw): SCSS to :(fab fa-css3 fa-fw): CSS, it is recommended to use Hugo **extended** version for better experience.
 {{< /admonition >}}
 
-## 2 Installation
+## Installation
 
 The following steps are here to help you initialize your new website. If you don’t know Hugo at all, we strongly suggest you learn more about it by following this [great documentation for beginners](https://gohugo.io/getting-started/quick-start/).
 
-### 2.1 Create Your Project
+### Create Your Project
 
 Hugo provides a `new` command to create a new website:
 
@@ -49,7 +49,7 @@ hugo new site my_website
 cd my_website
 ```
 
-### 2.2 Install the Theme
+### Install the Theme
 
 The **DoIt** theme’s repository is: [https://github.com/HEIGE-PCloud/DoIt](https://github.com/HEIGE-PCloud/DoIt).
 
@@ -68,7 +68,7 @@ git init
 git submodule add https://github.com/HEIGE-PCloud/DoIt.git themes/DoIt
 ```
 
-### 2.3 Basic Configuration {#basic-configuration}
+### Basic Configuration {#basic-configuration}
 
 The following is a basic configuration for the DoIt theme:
 
@@ -128,7 +128,7 @@ theme = "DoIt"
 When building the website, you can set a theme by using `--theme` option. However, we suggest you modify the configuration file (**config.toml**) and set the theme as the default.
 {{< /admonition >}}
 
-### 2.4 Create Your First Post
+### Create Your First Post
 
 Here is the way to create your first post:
 
@@ -142,7 +142,7 @@ Feel free to edit the post file by adding some sample content and replacing the 
 By default all posts and pages are created as a draft. If you want to render these pages, remove the property `draft: true` from the metadata, set the property `draft: false` or add `-D`/`--buildDrafts` parameter to `hugo` command.
 {{< /admonition >}}
 
-### 2.5 Launching the Website Locally
+### Launching the Website Locally
 
 Launch by using the following command:
 
@@ -165,9 +165,10 @@ it is highly recommended that you add `--disableFastRender` parameter to `hugo s
 ```bash
 hugo serve --disableFastRender
 ```
+
 {{< /admonition >}}
 
-### 2.6 Build the Website
+### Build the Website
 
 When your site is ready to deploy, run the following command:
 
@@ -182,9 +183,9 @@ The website can be automatically published and hosted with [Netlify](https://www
 Alternatively, you can use [AWS Amplify](https://gohugo.io/hosting-and-deployment/hosting-on-aws-amplify/), [Github pages](https://gohugo.io/hosting-and-deployment/hosting-on-github/), [Render](https://gohugo.io/hosting-and-deployment/hosting-on-render/) and more...
 {{< /admonition >}}
 
-## 3 Configuration
+## Configuration
 
-### 3.1 Site Configuration {#site-configuration}
+### Site Configuration {#site-configuration}
 
 In addition to [Hugo global configuration](https://gohugo.io/overview/configuration/) and [menu configuration](#basic-configuration), **DoIt** lets you define the following parameters in your site configuration (here is a `config.toml`, whose values are default).
 
@@ -194,6 +195,8 @@ Please open the code block below to view the complete sample configuration :(far
 [params]
   # {{< version 0.2.0 changed >}} DoIt theme version
   version = "0.2.X"
+  # website title
+  title = "My New Hugo Site"
   # site description
   description = "This is My New Hugo Site"
   # site keywords
@@ -212,6 +215,8 @@ Please open the code block below to view the complete sample configuration :(far
   # {{< version 0.2.11 >}} enable PWA support
   enablePWA = false
   # {{< version 0.2.0 >}} App icon config
+  # {{< version 0.2.14 >}} License information
+  license = '<a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a>'
   [params.app]
     # optional site title override for the app when added to an iOS home screen or Android launcher
     title = "DoIt"
@@ -227,7 +232,7 @@ Please open the code block below to view the complete sample configuration :(far
   # {{< version 0.2.0 >}} Search config
   [params.search]
     enable = true
-    # type of search engine ("lunr", "algolia", "fuse")
+    # type of search engine ("algolia", "fuse")
     type = "fuse"
     # max index length of the chunked content
     contentLength = 4000
@@ -285,6 +290,9 @@ Please open the code block below to view the complete sample configuration :(far
     custom = ''
     # {{< version 0.2.0 >}} whether to show Hugo and theme info
     hugo = true
+    # {{< version 0.2.14 >}} Hosted on (HTML format is supported)
+    # <a title="Github Pages" href="https://docs.github.com/en/pages/" target="_blank" rel="noopener noreffer">GitHub Pages</a>
+    hostedOn = '' 
     # {{< version 0.2.0 >}} whether to show copyright info
     copyright = true
     # {{< version 0.2.0 >}} whether to show the author
@@ -304,6 +312,12 @@ Please open the code block below to view the complete sample configuration :(far
     dateFormat = "01-02"
     # amount of RSS pages
     rss = 10
+    # {{< version 0.2.13 >}} recently updated posts settings
+    [params.section.recentlyUpdated]
+      enable = false
+      rss = false
+      days = 30
+      maxCount = 10
 
   # {{< version 0.2.0 >}} List (category or tag) page config
   [params.list]
@@ -411,6 +425,12 @@ Please open the code block below to view the complete sample configuration :(far
     Matrix = ""
     Bilibili = ""
     ORCID = ""
+    Liberapay = ""
+    Ko-Fi = ""
+    BuyMeACoffee = ""
+    Linktree = ""
+    QQ = ""
+    QQGroup = ""
     Email = "xxxx@xxxx.com"
     RSS = true # {{< version 0.2.0 >}}
 
@@ -432,10 +452,30 @@ Please open the code block below to view the complete sample configuration :(far
     fontawesome = true
     # whether to show link to Raw Markdown content of the content
     linkToMarkdown = true
+    # {{< version 0.2.14 >}} configure the link to the source file of the post
+    linkToSource = false
+    # "https://github.com/user/repo/blob/main/{path}"
+    # {{< version 0.2.13 >}} configure the link to edit the post
+    linkToEdit = false
+    # "https://github.com/user/repo/edit/main/{path}"
+    # "https://gitlab.com/user/repo/-/edit/main/{path}"
+    # "https://bitbucket.org/user/repo/src/main/{path}?mode=edit"
+    # {{< version 0.2.14 >}} configure the link to report issue for the post
+    linkToReport = false
+    # "https://github.com/user/repo/issues/new?title=[bug]%20{title}&body=|Field|Value|%0A|-|-|%0A|Title|{title}|%0A|Url|{url}|%0A|Filename|https://github.com/user/repo/blob/main/{path}|"
     # {{< version 0.2.4 >}} whether to show the full text content in RSS
     rssFullText = false
     # {{< version 0.2.11 >}} page layout style ("normal", "wide")
     pageStyle = "normal"
+    # {{< version 0.2.13 >}} whether to enable series navigation
+    seriesNavigation = true
+    # {{< version 0.2.13 >}} outdated article reminder config
+    [params.page.outdatedArticleReminder]
+      enable = false
+      # Display the reminder if the last modified time is more than 90 days ago.
+      reminder = 90
+      # Display warning if the last modified time is more than 180 days ago.
+      warning = 180
     # {{< version 0.2.0 >}} Table of the contents config
     [params.page.toc]
       # whether to enable the table of the contents
@@ -463,6 +503,10 @@ Please open the code block below to view the complete sample configuration :(far
       copy = true
       # the maximum number of lines of displayed code by default
       maxShownLines = 10
+    # {{< version 0.2.14 >}} Table config
+    [params.page.table]
+      # whether to enable sorting in the tables
+      sort = true
     # {{< version 0.2.0 >}} {{< link "https://docs.mapbox.com/mapbox-gl-js" "Mapbox GL JS" >}} config
     [params.page.mapbox]
       # access token of Mapbox GL JS
@@ -549,23 +593,20 @@ Please open the code block below to view the complete sample configuration :(far
         emoji = ""
       # {{< link "https://github.com/xCss/Valine" Waline >}} comment config
       [params.page.comment.waline]
-        # {{< version 0.2.11 >}}
+        # {{< version 0.2.14 changed >}}
         enable = false
         serverURL = ""
-        placeholder = "Just Go Go."
-        wordLimit = 0
-        avatar = "mp"
-        meta = ["nick", "mail", "link"]
-        pageSize = 10
-        lang = "en"
-        visitor = true
-        highlight = true
-        avatarCDN = ""
-        avatarForce = false
-        emojiCDN = ""
-        emojiMaps = ""
-        requiredFields = []
-        anonymous = false
+        pageview = true
+        comment = true
+        # emoji = ['https://cdn.jsdelivr.net/gh/walinejs/emojis/weibo']
+        # meta = ['nick', 'mail', 'link']
+        # requiredMeta = []
+        # login = 'enable'
+        # wordLimit = 0
+        # pageSize = 10
+        # imageUploader = false
+        # highlighter = false
+        # texRenderer = false
       # {{< link "https://developers.facebook.com/docs/plugins/comments" "Facebook comment" >}} config
       [params.page.comment.facebook]
         enable = false
@@ -583,6 +624,7 @@ Please open the code block below to view the complete sample configuration :(far
         colorful = true
         dislikes = false
         outlined = false
+        dark = false
       # {{< version 0.2.0 >}} {{< link "https://commento.io/" "Commento" >}} comment config
       [params.page.comment.commento]
         enable = false
@@ -602,18 +644,61 @@ Please open the code block below to view the complete sample configuration :(far
         region = ""
         path = ""
         visitor = true
+        commentCount = true
+      # {{< version 0.2.12 >}} {{< link "https://vssue.js.org/" "Vssue" >}} comment config
+      [params.page.comment.vssue]
+        enable = false
+        platform = "" # ("bitbucket", "gitea", "gitee", "github", "gitlab")
+        owner = ""
+        repo = ""
+        clientId = ""
+        clientSecret = ""
+      # {{< version 0.2.13 >}} {{< link "https://remark42.com/" "Remark42" >}} comment config
+      [params.page.comment.remark42]
+        enable = false
+        host = ""
+        site_id = ""
+        max_shown_comments = 15
+        show_email_subscription = true
+        simple_view = false
+      # {{< version 0.2.13 >}} {{< link "https://giscus.app/" "giscus" >}} comment config
+      [params.page.comment.giscus]
+        enable = false
+        # owner/repo
+        dataRepo = ""
+        dataRepoId = ""
+        dataCategory = ""
+        dataCategoryId = ""
+        dataMapping = "pathname"
+        dataReactionsEnabled = "1"
+        dataEmitMetadata = "0"
+        dataInputPosition = "bottom"
+        lightTheme = "light"
+        darkTheme = "dark"
+        dataLang = "en"
     # {{< version 0.2.7 >}} Third-party library config
     [params.page.library]
       [params.page.library.css]
         # someCSS = "some.css"
+        # {{< version 0.2.14 >}} Enhance third-party library config
+        # [params.page.library.css.someOtherCSS]
+        #   src = "someOther.css"
+        #   defer = true
+        #   attr = "customAttribute"
         # located in "assets/"
         # Or
         # someCSS = "https://cdn.example.com/some.css"
       [params.page.library.js]
-        # someJavascript = "some.js"
+        # someJavaScript = "some.js"
+        # {{< version 0.2.14 >}} Enhance third-party library config
+        # [params.page.library.js.someOtherJavaScript]
+        #   src = "someOther.js"
+        #   defer = false
+        #   async = true
+        #   attr = "customAttribute"
         # located in "assets/"
         # Or
-        # someJavascript = "https://cdn.example.com/some.js"
+        # someJavaScript = "https://cdn.example.com/some.js"
     # {{< version 0.2.10 changed >}} Page SEO config
     [params.page.seo]
       # image URL
@@ -622,6 +707,18 @@ Please open the code block below to view the complete sample configuration :(far
       [params.page.seo.publisher]
         name = ""
         logoUrl = ""
+    # {{< version 0.2.14>}} Related content config
+      [params.page.related]
+        enable = true
+        count = 5
+
+
+  # {{< version 0.2.13 >}} Sponsor config
+  [params.sponsor]
+    enable = false
+    bio = "If you find this post helpful, please consider sponsoring."
+    link = "https://www.buymeacoffee.com" # The link to your sponsor page
+    custom = "" # Custom HTML button
 
   # {{< version 0.2.5 >}} TypeIt config
   [params.typeit]
@@ -641,6 +738,8 @@ Please open the code block below to view the complete sample configuration :(far
     yandex = ""
     pinterest = ""
     baidu = ""
+    so = "" # 360 search
+    sogou = ""
 
   # {{< version 0.2.10 >}} Site SEO config
   [params.seo]
@@ -662,6 +761,22 @@ Please open the code block below to view the complete sample configuration :(far
       id = ""
       # server url for your tracker if you're self hosting
       server = ""
+    # {{< version 0.2.13 >}} Baidu Analytics
+    [params.analytics.baidu]
+      id = ""
+    # {{< version 0.2.13 >}} Umami Analytics
+    [params.analytics.umami]
+      data_website_id = ""
+      src = ""
+      data_host_url = ""
+      data_domains = ""
+    # {{< version 0.2.13 >}} Plausible Analytics
+    [params.analytics.plausible]
+      data_domain = ""
+      src = ""
+    # {{< version 0.2.14 >}} Cloudflare Analytics
+    [params.analytics.cloudflare]
+      token = ""
 
   # {{< version 0.2.7 >}} Cookie consent config
   [params.cookieconsent]
@@ -722,6 +837,8 @@ Please open the code block below to view the complete sample configuration :(far
   name = "xxxx"
   email = ""
   link = ""
+  avatar = ""
+  gravatarEmail = ""
 
 # Sitemap config
 [sitemap]
@@ -849,7 +966,7 @@ which is you can refer to.
 
 {{< image src="complete-configuration-preview.webp" caption="Complete configuration preview" height="1562" width="2450">}}
 
-### 3.2 Favicons, Browserconfig, Manifest
+### Favicons, Browserconfig, Manifest
 
 It is recommended to put your own favicons:
 
@@ -864,7 +981,7 @@ into `/static`. They’re easily created via [https://realfavicongenerator.net/]
 
 Customize `browserconfig.xml` and `site.webmanifest` to set theme-color and background-color.
 
-### 3.3 Style Customization
+### Style Customization
 
 {{< version 0.2.8 changed >}}
 
@@ -887,33 +1004,33 @@ $code-font-family: Fira Mono, Source Code Pro, Menlo, Consolas, Monaco, monospac
 
 In `assets/css/_custom.scss`, you can add some css style code to customize the style.
 
-## 4 Multilingual and i18n
+## Multilingual and i18n
 
 **DoIt** theme is fully compatible with Hugo multilingual mode, which provides in-browser language switching.
 
 {{< image src="language-switch.gif" caption="Language Switch" height="226" width="770">}}
 
-### 4.1 Compatibility {#language-compatibility}
+### Compatibility {#language-compatibility}
 
 {{< version 0.2.10 changed >}}
 
-| Language             | Hugo Code | HTML `lang` Attribute | Theme Docs                    | Lunr.js Support               |
-|:-------------------- |:---------:|:---------------------:|:-----------------------------:|:-----------------------------:|
-| English              | `en`      | `en`                  | :(far fa-check-square fa-fw): | :(far fa-check-square fa-fw): |
-| Simplified Chinese   | `zh-cn`   | `zh-CN`               | :(far fa-check-square fa-fw): | :(far fa-check-square fa-fw): |
-| French               | `fr`      | `fr`                  | :(far fa-square fa-fw):       | :(far fa-check-square fa-fw): |
-| Polish               | `pl`      | `pl`                  | :(far fa-square fa-fw):       | :(far fa-square fa-fw):       |
-| Brazilian Portuguese | `pt-br`   | `pt-BR`               | :(far fa-square fa-fw):       | :(far fa-check-square fa-fw): |
-| Italian              | `it`      | `it`                  | :(far fa-square fa-fw):       | :(far fa-check-square fa-fw): |
-| Spanish              | `es`      | `es`                  | :(far fa-square fa-fw):       | :(far fa-check-square fa-fw): |
-| German               | `de`      | `de`                  | :(far fa-square fa-fw):       | :(far fa-check-square fa-fw): |
-| German               | `de`      | `de`                  | :(far fa-square fa-fw):       | :(far fa-check-square fa-fw): |
-| Serbian              | `sr`      | `sr`                  | :(far fa-square fa-fw):       | :(far fa-square fa-fw):       |
-| Russian              | `ru`      | `ru`                  | :(far fa-square fa-fw):       | :(far fa-check-square fa-fw): |
-| Romanian             | `ro`      | `ro`                  | :(far fa-square fa-fw):       | :(far fa-check-square fa-fw): |
-| Vietnamese           | `vi`      | `vi`                  | :(far fa-square fa-fw):       | :(far fa-check-square fa-fw): |
+| Language             | Hugo Code | HTML `lang` Attribute | Theme Docs                    |
+|:-------------------- |:---------:|:---------------------:|:-----------------------------:|
+| English              | `en`      | `en`                  | :(far fa-check-square fa-fw): |
+| Simplified Chinese   | `zh-cn`   | `zh-CN`               | :(far fa-check-square fa-fw): |
+| French               | `fr`      | `fr`                  | :(far fa-square fa-fw):       |
+| Polish               | `pl`      | `pl`                  | :(far fa-square fa-fw):       |
+| Brazilian Portuguese | `pt-br`   | `pt-BR`               | :(far fa-square fa-fw):       |
+| Italian              | `it`      | `it`                  | :(far fa-square fa-fw):       |
+| Spanish              | `es`      | `es`                  | :(far fa-square fa-fw):       |
+| German               | `de`      | `de`                  | :(far fa-square fa-fw):       |
+| German               | `de`      | `de`                  | :(far fa-square fa-fw):       |
+| Serbian              | `sr`      | `sr`                  | :(far fa-square fa-fw):       |
+| Russian              | `ru`      | `ru`                  | :(far fa-square fa-fw):       |
+| Romanian             | `ro`      | `ro`                  | :(far fa-square fa-fw):       |
+| Vietnamese           | `vi`      | `vi`                  | :(far fa-square fa-fw):       |
 
-### 4.2 Basic Configuration
+### Basic Configuration
 
 After learning [how Hugo handle multilingual websites](https://gohugo.io/content-management/multilingual), define your languages in your [site configuration](#site-configuration).
 
@@ -1003,7 +1120,7 @@ Be aware that only translated pages are displayed in menu. It’s not replaced w
 Use [Front Matter parameter](https://gohugo.io/content-management/multilingual#translate-your-content) to translate urls too.
 {{< /admonition >}}
 
-### 4.3 Overwrite Translation Strings
+### Overwrite Translation Strings
 
 Translations strings are used for common default values used in the theme. Translations are available in [some languages](#language-compatibility), but you may use another language or want to override default values.
 
@@ -1011,13 +1128,13 @@ To override these values, create a new file in your local i18n folder `i18n/<lan
 
 By the way, as these translations could be used by other people, please take the time to propose a translation by [:(fas fa-code-branch fa-fw): making a PR](https://github.com/HEIGE-PCloud/DoIt/pulls) to the theme!
 
-## 5 Search
+## Search
 
 {{< version 0.2.0 >}}
 
-Based on [Lunr.js](https://lunrjs.com/) or [algolia](https://www.algolia.com/), searching is supported in **DoIt** theme.
+Based on [algolia](https://www.algolia.com/), searching is supported in **DoIt** theme.
 
-### 5.1 Output Configuration
+### Output Configuration
 
 In order to generate `index.json` for searching, add `JSON` output file type to the `home` of the `outputs` part in your [site configuration](#site-configuration).
 
@@ -1026,7 +1143,7 @@ In order to generate `index.json` for searching, add `JSON` output file type to 
   home = ["HTML", "RSS", "JSON"]
 ```
 
-### 5.2 Search Configuration
+### Search Configuration
 
 Based on `index.json` generated by Hugo, you could activate searching.
 
@@ -1035,7 +1152,7 @@ Here is the search configuration in your [site configuration](#site-configuratio
 ```toml
 [params.search]
   enable = true
-  # type of search engine ("lunr", "algolia", "fuse")
+  # type of search engine ("algolia", "fuse")
   type = "fuse"
   # max index length of the chunked content
   contentLength = 4000
@@ -1070,8 +1187,6 @@ Here is the search configuration in your [site configuration](#site-configuratio
 The following is a comparison of two search engines:
 
 * `fuse`: simple, no need to synchronize `index.json`, no limit for `contentLength`, high performance
-* `lunr`: simple, no need to synchronize `index.json`, no limit for `contentLength`,
-  but high bandwidth and low performance (Especially for Chinese which needs a large segmentit library)
 * `algolia`: high performance and low bandwidth, but need to synchronize `index.json` and limit for `contentLength`
 
 {{< version 0.2.3 >}} The content of the post is separated by `h2` and `h3` HTML tag to improve query performance and basically implement full-text search.

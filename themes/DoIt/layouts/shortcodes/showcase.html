@@ -3,18 +3,22 @@
 {{- $link := "" -}}
 {{- $summary := "" -}}
 {{- $column := "2" -}}
+{{- $linkExtra := "" -}}
 {{ if .IsNamedParams }}
-{{- $title = .Get "title" -}}
-{{- $summary = .Get "summary" -}}
-{{- $link = .Get "link" -}}
-{{- $image = .Get "image" -}}
-{{- $column = .Get "column" -}}
+{{- $title = .Get "title" | default $title -}}
+{{- $summary = .Get "summary" | default $summary -}}
+{{- $link = .Get "link" | default $link -}}
+{{- $image = .Get "image" | default $image -}}
+{{- $column = .Get "column" | default $column -}}
+{{- $linkExtra = .Get "link_extra" | default $linkExtra -}}
 {{- else -}}
-{{- $title = .Get 0 -}}
-{{- $summary = .Get 1 -}}
-{{- $image = .Get 2 -}}
-{{- $link = .Get 3 -}}
-{{- $column = .Get 4 -}}
+{{- $title = .Get 0 | default $title -}}
+{{- $summary = .Get 1 | default $summary -}}
+{{- $image = .Get 2 | default $image -}}
+{{- $link = .Get 3 | default $link -}}
+{{- $column = .Get 4 | default $column -}}
+{{- $linkExtra = .Get 5 | default $linkExtra -}}
+
 {{ end }}
 <div class="showcase-box column-{{ $column }}">
     <div class="showcase-image">
@@ -22,13 +26,18 @@
             {{- dict "Src" $image "Height" "200" "Width" "400" "Title" $title | partial "plugin/image.html" -}}
         </a>
     </div>
-    <h1 class="showcase-title">
+    <h2 class="showcase-title">
         <a href={{ $link }}>{{ $title }}</a>
-    </h1>
+    </h2>
     <p class="showcase-summary">
         {{ $summary }}
     </p>
     <a class="showcase-link" href={{ $link }}>
         {{ T "readMore" }}
     </a>
+    {{- if .Get "linkExtra" -}}
+    <a class="showcase-link-extra" href={{ $linkExtra }}>
+        {{ T "abstract" }}
+    </a>
+    {{ end }}
 </div>

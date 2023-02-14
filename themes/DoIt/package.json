@@ -1,40 +1,14 @@
 {
   "name": "doit-src",
-  "version": "0.2.0",
+  "version": "0.2.13",
   "description": "DoIt theme source file",
   "private": true,
-  "devDependencies": {
-    "@babel/cli": "^7.14.8",
-    "@babel/core": "^7.14.8",
-    "@babel/preset-env": "^7.14.8",
-    "babel-preset-minify": "^0.5.1",
-    "babelify": "^10.0.0",
-    "browserify": "^17.0.0",
-    "core-js": "^3.15.2",
-    "husky": "^7.0.1",
-    "minimist": "1.2.5",
-    "segmentit": "^2.0.3"
-  },
   "scripts": {
-    "preinstall": "npx npm-force-resolutions",
-    "babel": "npx babel src/js/theme.js --out-file assets/js/theme.min.js --source-maps --no-comments && npx babel src/js/sw.js --out-file assets/sw.min.js --source-maps --no-comments",
-    "build": "npm run babel && hugo -v --source=exampleSite --themesDir ../.. --gc",
-    "build-lunr-segmentit": "browserify src/lib/lunr.segmentit.js -o assets/lib/lunr/lunr.segmentit.js -t babelify --presets @babel/preset-env --presets minify",
-    "start": "npm run babel && hugo server --source=exampleSite --themesDir ../.. -D --disableFastRender",
-    "start-production": "npm run babel && hugo server --source=exampleSite --themesDir ../.. -D --disableFastRender -e production",
-    "check": "htmlproofer exampleSite/public --check-html --allow-hash-href --empty-alt-ignore --disable-external",
-    "copy": "rm -rf resources && cp -rf exampleSite/resources resources",
-    "serve": "hugo server --source=exampleSite --themesDir ../.. -D --disableFastRender",
-    "serve-production": "hugo server --source=exampleSite --themesDir ../.. -D --disableFastRender -e production",
+    "build": "hugo -v --source=exampleSite --themesDir ../.. --gc",
+    "build:preview": "hugo -v --source=exampleSite --themesDir ../.. -D --gc",
+    "server": "hugo server --source=exampleSite --themesDir ../.. -D --disableFastRender",
+    "server:production": "hugo server --source=exampleSite --themesDir ../.. --disableFastRender -e production",
     "algolia": "atomic-algolia"
-  },
-  "resolutions": {
-    "minimist": "1.2.5"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run build && npm run copy && git add resources assets/js"
-    }
   },
   "repository": {
     "type": "git",
@@ -51,6 +25,26 @@
   },
   "homepage": "https://github.com/HEIGE-PCloud/DoIt#readme",
   "dependencies": {
-    "atomic-algolia": "^0.3.19"
+    "@waline/client": "^2.14.7",
+    "aplayer": "^1.10.1",
+    "atomic-algolia": "^0.3.19",
+    "autocomplete.js": "^0.38.1",
+    "clipboard": "^2.0.11",
+    "cookieconsent": "^3.1.1",
+    "echarts": "^5.4.1",
+    "katex": "^0.16.4",
+    "mermaid": "^9.3.0",
+    "node-fetch": "^3.3.0",
+    "tablesort": "^5.3.0",
+    "twemoji": "^14.0.2",
+    "twikoo": "^1.6.9",
+    "valine": "^1.5.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.33.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-n": "^15.6.1",
+    "eslint-plugin-promise": "^6.1.1"
   }
 }

@@ -35,6 +35,13 @@ other = "分类"
 other = "系列"
 # === Taxonomy ===
 
+# === Section ===
+
+[recentlyUpdated]
+other = "最近更新"
+
+# === Section ===
+
 # === Pagination ===
 [more]
 other = "更多"
@@ -61,8 +68,14 @@ other = "跟随系统"
 # === partials/header.html ===
 
 # === partials/footer.html ===
-[poweredBySome]
-other = "由 {{ .Hugo }} 强力驱动 | 主题 - {{ .Theme }}"
+[poweredBy]
+other = "由 {{ .Hugo }} 强力驱动"
+
+[hostedOn]
+other = "托管在 {{ .Host }} 上"
+
+[theme]
+other = "主题 - {{ .Theme }}"
 # === partials/footer.html ===
 
 # === partials/comment.html ===
@@ -91,15 +104,6 @@ other = "取消"
 
 [noResultsFound]
 other = "没有找到结果"
-
-[lunrLanguageCode]
-other = "zh"
-
-[lunrLanguageLib]
-other = "lib/lunr/lunr.zh.js"
-
-[lunrSegmentitLib]
-other = "lib/lunr/lunr.segmentit.js"
 
 [copyToClipboard]
 other = "复制到剪贴板"
@@ -147,6 +151,9 @@ other = "预计阅读 {{ .Count }} 分钟"
 [views]
 other = "次阅读"
 
+[comments]
+other = "条评论"
+
 [author]
 other = "作者"
 
@@ -156,6 +163,15 @@ other = "更新于 {{ .Date }}"
 [readMarkdown]
 other = "阅读原始文档"
 
+[viewSource]
+other = "查看源代码"
+
+[editThisPage]
+other = "编辑此页"
+
+[reportThisPage]
+other = "报告问题"
+
 [back]
 other = "返回"
 
@@ -164,6 +180,18 @@ other = "主页"
 
 [readMore]
 other = "阅读全文"
+
+[outdatedInfoWarningBefore]
+other = "本文最后更新于 "
+
+[outdatedInfoWarningAfter]
+other = "，文中内容可能已过时。"
+
+[sponsor]
+other = "赞赏"
+
+[relatedContent]
+other = "相关内容"
 # === posts/single.html ===
 
 # === 404.html ===
@@ -222,3 +250,4 @@ other = "更改"
 [deleted]
 other = "删除"
 # === shortcodes/version.html ===
+

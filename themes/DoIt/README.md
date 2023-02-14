@@ -24,6 +24,12 @@ You can add this repo as a submodule of your site directory.
 git submodule add https://github.com/HEIGE-PCloud/DoIt.git themes/DoIt
 ```
 
+And later you can update the submodule in your site directory to the latest commit using this command:
+
+```bash
+git submodule update --remote --merge
+```
+
 Alternatively, you can download the [latest release .zip file](https://github.com/HEIGE-PCloud/DoIt/releases) of the theme and extract it in the themes directory. (Not recommended, the repo is being updated frequently so the releases may out of date.)
 
 Next, go to the `config.toml` and change the default theme to `DoIt`.
@@ -51,7 +57,7 @@ To see this theme in action, here is a live [demo site](https://hugodoit.pages.d
 * Some beautiful **CSS animations**
 * Easy-to-use and self-expanding **table of contents**
 * More **social links**, **share sites** and **comment system**
-* **Search** supported by [Lunr.js](https://lunrjs.com/) or [algolia](https://www.algolia.com/) or [Fuse.js](https://fusejs.io/)
+* **Search** supported by [algolia](https://www.algolia.com/) or [Fuse.js](https://fusejs.io/)
 * **Copy code** to clipboard with one click
 * Extended Markdown syntax for **[Font Awesome](https://fontawesome.com/) icons**
 * Extended Markdown syntax for **ruby annotation**
@@ -66,7 +72,6 @@ To see this theme in action, here is a live [demo site](https://hugodoit.pages.d
 * Custom style shortcodes supported
 * **CDN** for all third-party libraries supported
 * **Mulitple Authors** supported
-* **PJAX** supported
 * ...
 
 In short,
@@ -83,9 +88,13 @@ the DoIt theme may be more suitable for you.
 * Optimized SEO performance with a correct **SEO SCHEMA** based on JSON-LD
 * **[Google Analytics](https://analytics.google.com/analytics)** supported
 * **[Fathom Analytics](https://usefathom.com/)** supported
+* **[Baidu Analytics](https://tongji.baidu.com/)** supported
+* **[Umami Analytics](https://umami.is/)** supported
+* **[Plausible Analytics](https://plausible.io/)** supported
+* **[Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics)** supported
+* **[Splitbee Analytics](https://splitbee.io)** supported
 * Search engine **verification** supported (Google, Bind, Yandex and Baidu)
 * **CDN** for third-party libraries supported
-* Automatically converted images with **Lazy Load** by [lazysizes](https://github.com/aFarkas/lazysizes)
 
 ### Appearance and Layout
 
@@ -114,10 +123,13 @@ the DoIt theme may be more suitable for you.
 * **Commento** comment system supported by [Commento](https://commento.io/)
 * **Utterances** comment system supported by [Utterances](https://utteranc.es/)
 * **Twikoo** comment system supported by [Twikoo](https://twikoo.js.org/)
+* **Vssue** comment system supported by [Vssue](https://vssue.js.org/)
+* **Remark42** comment system supported by[Remark42](https://remark42.com/)
+* **giscus** comment system supported by [giscus](https://giscus.app/)
 
 ### Extended Features
 
-* **Search** supported by [Lunr.js](https://lunrjs.com/) or [algolia](https://www.algolia.com/) or [Fuse.js](https://fusejs.io/)
+* **Search** supported by [algolia](https://www.algolia.com/) or [Fuse.js](https://fusejs.io/)
 * **Twemoji** supported
 * Automatically **highlighting** code
 * **Copy code** to clipboard with one click
@@ -187,10 +199,8 @@ Thanks to the authors of following resources included in the theme:
 * [Simple Icons](https://github.com/simple-icons/simple-icons)
 * [Animate.css](https://daneden.github.io/animate.css/)
 * [autocomplete.js](https://github.com/algolia/autocomplete.js)
-* [Lunr.js](https://lunrjs.com/)
 * [algoliasearch](https://github.com/algolia/algoliasearch-client-javascript)
 * [Fuse.js](https://fusejs.io/)
-* [lazysizes](https://github.com/aFarkas/lazysizes)
 * [object-fit-images](https://github.com/fregante/object-fit-images)
 * [Twemoji](https://github.com/twitter/twemoji)
 * [lightgallery.js](https://github.com/sachinchoolur/lightgallery.js)
@@ -207,18 +217,10 @@ Thanks to the authors of following resources included in the theme:
 * [Valine](https://valine.js.org/)
 * [Waline](https://waline.js.org/)
 * [Twikoo](https://twikoo.js.org/)
+* [Vssue](https://vssue.js.org/)
+* [Remark42](https://remark42.com/)
 * [cookieconsent](https://github.com/osano/cookieconsent)
-* [Pjax](https://github.com/PaperStrike/Pjax)
-* [Topbar](https://github.com/buunguyen/topbar)
 
 ## Author
 
 [PCloud](https://github.com/HEIGE-PCloud)
-
-## Sponsor
-
-If you enjoy the theme, please consider buying me a coffee ☕️.
-
-https://www.buymeacoffee.com/PCloud
-
-Thanks! ❤️

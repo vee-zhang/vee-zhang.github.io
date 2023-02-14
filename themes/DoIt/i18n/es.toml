@@ -30,7 +30,17 @@ other = "Categoría"
 
 [categories]
 other = "Categorías"
+
+[series]
+other = "Series"
 # === Taxonomy ===
+
+# === Section ===
+
+[recentlyUpdated]
+other = "Recientemente Actualizado"
+
+# === Section ===
 
 # === Pagination ===
 [more]
@@ -39,15 +49,21 @@ other = "Más"
 
 # === partials/header.html ===
 [selectLanguage]
-other = "Selecciona el lenguage"
+other = "Seleccione el idioma"
 
 [switchTheme]
 other = "Cambia el tema"
 # === partials/header.html ===
 
 # === partials/footer.html ===
-[poweredBySome]
-other = "Provisto por {{ .Hugo }} | Tema - {{ .Theme }}"
+[poweredBy]
+other = "Impulsado por {{ .Hugo }}"
+
+[hostedOn]
+other = "Alojado en {{ .Host }}"
+
+[theme]
+other = "Tema - {{ .Theme }}"
 # === partials/footer.html ===
 
 # === partials/comment.html ===
@@ -58,7 +74,7 @@ other = "en"
 other = "Tu comentario ..."
 
 [facebookLanguageCode]
-other = "es_MX"
+other = "es"
 # === partials/comment.html ===
 
 # === partials/assets.html ===
@@ -77,12 +93,6 @@ other = "Cancelar"
 [noResultsFound]
 other = "No se encontraron resultados"
 
-[lunrLanguageCode]
-other = "es"
-
-[lunrLanguageLib]
-other = "lib/lunr/lunr.es.js"
-
 [copyToClipboard]
 other = "Copiar al portapapeles"
 
@@ -93,7 +103,7 @@ other = "Este sitio web utiliza Cookies para mejorar su experiencia."
 other = "De acuerdo"
 
 [cookieconsentLink]
-other = "Aprende más"
+other = "Saber más"
 # === partials/assets.html ===
 
 # === partials/plugin/share.html ===
@@ -103,13 +113,23 @@ other = "Compartir en"
 
 # === posts/single.html ===
 [contents]
-other = "Contenido"
+other = "Contenidos"
 
 [publishedOnDate]
 other = "publicado el {{ .Date }}"
 
+[includedIn]
+other = "Incluido en "
+
+[includedInAnd]
+other = "y"
+
 [includedInCategories]
-other = "incluido en {{ .Categories }}"
+one = "categoría {{ .Categories }}"
+other = "categorías {{ .Categories }}"
+
+[includedInSeries]
+other = "series {{ .Series }}"
 
 [wordCount]
 one = "Una palabra"
@@ -122,6 +142,9 @@ other = "{{ .Count }} minutos"
 [views]
 other = "vistas"
 
+[comments]
+other = "comentarios"
+
 [author]
 other = "Autor"
 
@@ -129,7 +152,16 @@ other = "Autor"
 other = "Actualizado el {{ .Date }}"
 
 [readMarkdown]
-other = "Leer Markdown"
+other = "Leer markdown"
+
+[viewSource]
+other = "Ver código"
+
+[editThisPage]
+other = "Editar esta página"
+
+[reportThisPage]
+other = "Reportar problema"
 
 [back]
 other = "Regresar"
@@ -139,6 +171,12 @@ other = "Inicio"
 
 [readMore]
 other = "Leer más"
+
+[outdatedInfoWarningBefore]
+other = "Este artículo se actualizó por última vez el "
+
+[outdatedInfoWarningAfter]
+other = ", el contenido puede estar desactualizado."
 # === posts/single.html ===
 
 # === 404.html ===

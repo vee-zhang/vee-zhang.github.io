@@ -15,6 +15,12 @@
 {{- with .Site.Params.verification.baidu -}}
     <meta name="baidu-site-verification" content="{{ . }}" />
 {{- end -}}
+{{- with .Site.Params.verification.sogou -}}
+    <meta name="sogou_site_verification" content="{{ . }}" />
+{{- end -}}
+{{- with .Site.Params.verification.so -}}
+    <meta name="360-site-verification" content="{{ . }}" />
+{{- end -}}
 
 {{- /* Home SEO */ -}}
 {{- if .IsHome -}}
@@ -144,17 +150,20 @@
         {{- if .Params.authors -}}
         "authors": [
         {{- $lang := ( $.Params.lang | default $.Lang ) -}}
-        {{- range $i, $authorID := .Params.authors -}}
-            {{- with partial "function/authorinfo.html" (dict
-                "authorID" $authorID
-                "author" (index $.Site.Data.authors $authorID)
-                "lang" $lang
-            ) -}}
-                {{- if gt $i 0 }},{{ end -}}
-                {
-                    "@type": "Person",
-                    "name": "{{ .name }}"
-                }
+        {{- range $i, $name := .Params.authors -}}
+            {{- if $.Site.Data.author -}}
+                {{- with partial "function/author.html" (dict "name" $name "author" (index $.Site.Data.authors $name) "lang" $lang) -}}
+                    {{- if gt $i 0 }},{{ end -}}
+                    {
+                        "@type": "Person",
+                        "name": "{{ .name }}"
+                    }
+                {{- end -}}
+            {{- else -}}
+                    {
+                        "@type": "Person",
+                        "name": "{{ $name }}"                    
+                    }
             {{- end -}}
         {{- end -}}
         ],

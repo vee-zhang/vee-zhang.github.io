@@ -13,20 +13,21 @@ math:
 >
 > It is based on the [LoveIt Theme](https://github.com/dillonzq/LoveIt), [LeaveIt Theme](https://github.com/liuzc/LeaveIt) and [KeepIt Theme](https://github.com/Fastbyte01/KeepIt).
 
-### Features
+## Features
 
-#### Performance and SEO
+### Performance and SEO
 
 * :(fas fa-rocket fa-fw): Optimized for **performance**: [99]/[100] on mobile and [100]/[100] on desktop in [Google PageSpeed Insights](https://developers.google.com/speed/pagespeed/insights)
-* :(fas fa-space-shuttle fa-fw): **PJAX** loading supported
 * :(fab fa-searchengin fa-fw): Optimized SEO performance with a correct **SEO SCHEMA** based on JSON-LD
 * :(fab fa-google fa-fw): **[Google Analytics](https://analytics.google.com/analytics)** supported
 * :(far fa-chart-bar fa-fw): **[Fathom Analytics](https://usefathom.com/)** supported
+* :(far fa-chart-bar fa-fw): **[Baidu Analytics](https://tongji.baidu.com/)** supported
+* :(far fa-chart-bar fa-fw): **[Umami Analytics](https://umami.is/)** supported
+* :(far fa-chart-bar fa-fw): **[Plausible Analytics](https://plausible.io/)** supported
 * :(fas fa-search fa-fw): Search engine **verification** supported (Google, Bind, Yandex and Baidu)
 * :(fas fa-tachometer-alt fa-fw): **CDN** for third-party libraries supported
-* :(fas fa-cloud-download-alt fa-fw): Automatically converted images with **Lazy Load** by [lazysizes](https://github.com/aFarkas/lazysizes)
 
-#### Appearance and Layout
+### Appearance and Layout
 
 * [:(fas fa-desktop):]/[:(fas fa-mobile):] **Responsive** layout
 * [:(fas fa-sun):]/[:(fas fa-moon):] **[Light]/[Dark]** mode
@@ -36,7 +37,7 @@ math:
 * :(fas fa-language fa-fw): **Multilanguage** supported and i18n ready
 * :(fab fa-css3-alt fa-fw): Beautiful **CSS animation**
 
-#### Social and Comment Systems
+### Social and Comment Systems
 
 * :(far fa-user fa-fw): **Gravatar** supported by [Gravatar](https://gravatar.com)
 * :(fas fa-user-circle fa-fw): Local **Avatar** supported
@@ -51,10 +52,13 @@ math:
 * :(fas fa-comment-dots fa-fw): **Commento** comment system supported by [Commento](https://commento.io/)
 * :(fas fa-comment-alt fa-fw): **Utterances** comment system supported by [Utterances](https://utteranc.es/)
 * :(fas fa-comment-alt fa-fw): **Twikoo** comment system supported by [Twikoo](https://twikoo.js.org/)
+* :(fas fa-comment-alt fa-fw): **Vssue** comment system supported by [Vssue](https://vssue.js.org/)
+* :(fas fa-comment-alt fa-fw): **Remark42** comment system supported by [Remark42](https://remark42.com/)
+* :(fas fa-gem fa-fw): **giscus** comment system supported by [giscus](https://giscus.app/)
 
-#### Extended Features
+### Extended Features
 
-* :(fas fa-search fa-fw): **Search** supported by [Lunr.js](https://lunrjs.com/) or [algolia](https://www.algolia.com/) or [Fuse.js](https://fusejs.io/)
+* :(fas fa-search fa-fw): **Search** supported by [algolia](https://www.algolia.com/) or [Fuse.js](https://fusejs.io/)
 * :(far fa-grin-tongue-wink fa-fw): **Twemoji** supported
 * :(fas fa-code fa-fw): Automatically **highlighting** code
 * :(far fa-copy fa-fw): **Copy code** to clipboard with one click
@@ -75,7 +79,7 @@ math:
 * :(fas fa-cookie-bite fa-fw): **Cookie consent banner** supported by [cookieconsent](https://github.com/osano/cookieconsent)
 * ...
 
-### License
+## License
 
 DoIt is licensed under the **MIT** license.
 
@@ -88,10 +92,8 @@ Thanks to the authors of following resources included in the theme:
 * [Simple Icons](https://github.com/simple-icons/simple-icons)
 * [Animate.css](https://daneden.github.io/animate.css/)
 * [autocomplete.js](https://github.com/algolia/autocomplete.js)
-* [Lunr.js](https://lunrjs.com/)
 * [algoliasearch](https://github.com/algolia/algoliasearch-client-javascript)
 * [Fuse.js](https://fusejs.io/)
-* [lazysizes](https://github.com/aFarkas/lazysizes)
 * [object-fit-images](https://github.com/fregante/object-fit-images)
 * [Twemoji](https://github.com/twitter/twemoji)
 * [lightgallery.js](https://github.com/sachinchoolur/lightgallery.js)
@@ -108,6 +110,6 @@ Thanks to the authors of following resources included in the theme:
 * [Valine](https://valine.js.org/)
 * [Waline](https://waline.js.org/)
 * [Twikoo](https://twikoo.js.org/)
+* [Vssue](https://vssue.js.org/)
 * [cookieconsent](https://github.com/osano/cookieconsent)
-* [Pjax](https://github.com/PaperStrike/Pjax)
-* [Topbar](https://github.com/buunguyen/topbar)
+* [Remark42](https://remark42.com/)

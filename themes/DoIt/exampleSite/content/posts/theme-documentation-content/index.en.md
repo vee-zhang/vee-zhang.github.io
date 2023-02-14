@@ -1,8 +1,8 @@
 ---
 weight: 2
 title: "Theme Documentation - Content"
-date: 2020-03-05T15:58:26+08:00
-lastmod: 2020-03-05T15:58:26+08:00
+date: 2020-03-04T15:58:26+08:00
+lastmod: 2020-03-04T15:58:26+08:00
 draft: false
 authors: ["Dillon", "PCloud"]
 description: "Find out how to create and organize your content quickly and intuitively in DoIt theme."
@@ -11,7 +11,7 @@ featuredImage: "featured-image.webp"
 tags: ["content", "Markdown"]
 categories: ["documentation"]
 series: ["getting-start"]
-
+series_weight: 2
 lightgallery: true
 
 toc:
@@ -24,7 +24,7 @@ Find out how to create and organize your content quickly and intuitively in **Do
 
 <!--more-->
 
-## 1 Contents Organization {#contents-organization}
+## Contents Organization {#contents-organization}
 
 A few suggestions to help you get a good looking site quickly:
 
@@ -54,7 +54,7 @@ will be supported in the future.
 It's really cool! :(far fa-grin-squint fa-fw):
 {{< /admonition >}}
 
-## 2 Author Settings {#author-setup}
+## Author Settings {#author-setup}
 
 You are encouraged to create your author profile under `mysite/data/authors` as `author_name.toml`. In your profile, you can specify the link, email and name with i18n support.
 
@@ -84,7 +84,7 @@ authors: [Alice, Bob, Catherine]
 ---
 ```
 
-## 3 Front Matter {#front-matter}
+## Front Matter {#front-matter}
 
 **Hugo** allows you to add front matter in `yaml`, `toml` or `json` to your content files.
 
@@ -110,6 +110,8 @@ images: []
 tags: []
 categories: []
 series: []
+series_weight: 1
+seriesNavigation: true
 featuredImage: ""
 featuredImagePreview: ""
 
@@ -121,13 +123,20 @@ ruby: true
 fraction: true
 fontawesome: true
 linkToMarkdown: true
+linkToSource: false
+linkToEdit: false
+linkToReport: false
 rssFullText: false
+license: ''
 
 toc:
   enable: true
   auto: true
 code:
   copy: true
+  # ...
+table:
+  sort: true
   # ...
 math:
   enable: true
@@ -155,6 +164,15 @@ library:
 seo:
   images: []
   # ...
+outdatedArticleReminder:
+  enable: false
+  # ...
+sponsor:
+  enable: false
+  # ...
+related:
+  enable: false
+  count: 5
 ---
 ```
 
@@ -171,6 +189,8 @@ seo:
 * **tags**: the tags for the content.
 * **categories**: the categories for the content.
 * **series**: {{< version 0.2.12 >}} the series for the content.
+* **series_weight**: {{< version 0.2.13 >}} define the [position](https://gohugo.io/content-management/taxonomies/#order-taxonomies) of the post in the series.
+* **seriesNavigation**: {{< version 0.2.13 >}} whether to enable series navigation.
 * **featuredImage**: the featured image for the content.
 * **featuredImagePreview**: the featured image for the content preview in the home page.
 
@@ -181,18 +201,26 @@ seo:
 * **ruby**: {{< version 0.2.0 >}} if `true`, the content will enable the [ruby extended syntax](#ruby).
 * **fraction**: {{< version 0.2.0 >}} if `true`, the content will enable the [fraction extended syntax](#fraction).
 * **fontawesome**: {{< version 0.2.0 >}} if `true`, the content will enable the [Font Awesome extended syntax](#fontawesome).
-* **linkToMarkdown**: if `true`, the footer of the content will be shown the link to the orignal Markdown file.
+* **linkToMarkdown**: if `true`, the footer of the content will be shown the link to the original Markdown file.
+* **linkToSource**: {{< version 0.2.14 >}} if `false`, turn off the **view source** link in the footer. You can set it to the link to the source file of the post. Use the magic variable `{path}` to specify the relative path of the post, for example, the `{path}` for this post is `posts/theme-documentation-content/index.en.md`.
+* **linkToEdit**: {{< version 0.2.13 >}} if `false`, turn off the **edit this page** link in the footer. You can set it to the link to edit the page. Use the magic variable `{path}` to specify the relative path of the post, for example, the `{path}` for this post is `posts/theme-documentation-content/index.en.md`.
+* **linkToReport**: {{< version 0.2.14 >}} if `false`, turn off the **report issue** link in the footer. You can set it to the link to report issues about the page. Use the magic variables: `{path}` to specify the relative path of the post, for example, the `{path}` for this post is `posts/theme-documentation-content/index.en.md`, `{title}` to specify the title of the post, for example, the `{title}` for this post is `Theme Documentation - Content` and `{url}` to specify the url of the post, for example, the `{url}` for this post is `https://hugodoit.pages.dev/theme-documentation-content/`.
 * **rssFullText**: {{< version 0.2.4 >}} if `true`, the full text content will be shown in RSS.
 * **pageStyle**: {{< version 0.2.11 >}} adjust the page layout style, "normal" or "wide".
+* **license**: {{< version 0.2.14 >}} set the license info (HTML format is supported).
 
 * **toc**: {{< version 0.2.9 changed >}} the same as the `params.page.toc` part in the [site configuration](../theme-documentation-basics#site-configuration).
 * **code**: {{< version 0.2.0 >}} the same as the `params.page.code` part in the [site configuration](../theme-documentation-basics#site-configuration).
+* **table**: {{< version 0.2.14 >}} the same as the `params.page.table` part in the [site configuration](../theme-documentation-basics#site-configuration).
 * **math**: {{< version 0.2.0 changed >}} the same as the `params.page.math` part in the [site configuration](../theme-documentation-basics#site-configuration).
 * **mapbox**: {{< version 0.2.0 >}} the same as the `params.page.mapbox` part in the [site configuration](../theme-documentation-basics#site-configuration).
 * **share**: the same as the `params.page.share` part in the [site configuration](../theme-documentation-basics#site-configuration).
 * **comment**: {{< version 0.2.0 changed >}} the same as the `params.page.comment` part in the [site configuration](../theme-documentation-basics#site-configuration).
 * **library**: {{< version 0.2.7 >}} the same as the `params.page.library` part in the [site configuration](../theme-documentation-basics#site-configuration).
 * **seo**: {{< version 0.2.10 >}} the same as the `params.page.seo` part in the [site configuration](../theme-documentation-basics#site-configuration).
+* **outdatedArticleReminder**: {{< version 0.2.13 >}} the same as the `params.page.outdatedArticleReminder` part in the [site configuration](../theme-documentation-basics#site-configuration).
+* **sponsor**: {{< version 0.2.13 >}} the same as the `params.sponsor` part in the [site configuration](../theme-documentation-basics#site-configuration).
+* **related**: {{< version 0.2.14 >}} the same as the `params.page.related` part in the [site configuration](../theme-documentation-basics#site-configuration).
 
 {{< admonition tip >}}
 {{< version 0.2.10 >}}
@@ -211,7 +239,7 @@ resources:
 ```
 {{< /admonition >}}
 
-## 4 Content Summaries
+## Content Summaries
 
 **DoIt** theme uses the summary of the content to display abstract information in the home page. Hugo can generate summaries of your content.
 
@@ -258,11 +286,11 @@ Because there are multiple ways in which a summary can be specified it is useful
 It is not recommended to include rich text block elements in the summary, which will cause typographic errors. Such as code blocks, pictures, tables, etc.
 {{< /admonition >}}
 
-## 5 Basic Markdown Syntax
+## Basic Markdown Syntax
 
 This part is shown in the [basic markdown syntax page](../basic-markdown-syntax/).
 
-## 6 Extended Markdown Syntax {#extended-markdown-syntax}
+## Extended Markdown Syntax {#extended-markdown-syntax}
 
 **DoIt** theme has some extended syntax elements for you to write articles.
 

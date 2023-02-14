@@ -24,6 +24,12 @@ DoIt 主题的目标是创建一个功能强大且易于使用的 Hugo 主题，
 git submodule add https://github.com/HEIGE-PCloud/DoIt.git themes/DoIt
 ```
 
+之后，你可以通过这条命令来将主题更新至最新版本。
+
+```bash
+git submodule update --remote --merge
+```
+
 或者，你可以下载主题的[最新版本.zip 文件](https://github.com/HEIGE-PCloud/DoIt/releases)并且解压放到`themes`目录。（不推荐，这个主题会被频繁更新，发行版中可能包含过时的文件。）
 
 接着，前往 `config.toml` 并将默认主题更改为 `DoIt`。
@@ -51,7 +57,7 @@ DoIt 主题增加了许多新的功能与配置项，查看[变更日志](https:
 * 一些美观的 **CSS 动画**
 * 易用和自动展开的**文章目录**
 * 支持更多的**社交链接**、**网站分享**和**评论系统**
-* 支持基于 [Lunr.js](https://lunrjs.com/) 或 [algolia](https://www.algolia.com/) 或 [Fuse.js](https://fusejs.io/) 的**搜索**
+* 支持基于 [algolia](https://www.algolia.com/) 或 [Fuse.js](https://fusejs.io/) 的**搜索**
 * 一键**复制代码**到剪贴板
 * 支持基于 **[Font Awesome](https://fontawesome.com/) 图标**的扩展 Markdown 语法
 * 支持**上标注释**的扩展 Markdown 语法
@@ -66,7 +72,6 @@ DoIt 主题增加了许多新的功能与配置项，查看[变更日志](https:
 * 支持自定义样式的 shortcode
 * 支持所有第三方库的 **CDN**
 * 支持**多作者分类**
-* 支持 **PJAX**
 * ...
 
 所以，如果你更偏好 DoIt 主题的设计语言和自由度，如果你想便捷地使用扩展的 Font Awesome 图标，如果你想在文章内嵌数学公式、流程图、音乐或是 Bilibili 视频，
@@ -80,9 +85,13 @@ DoIt 主题增加了许多新的功能与配置项，查看[变更日志](https:
 * 使用基于 JSON-LD 格式 的 **SEO SCHEMA** 文件进行 SEO 优化
 * 支持 **[Google Analytics](https://analytics.google.com/analytics)**
 * 支持 **[Fathom Analytics](https://usefathom.com/)**
+* 支持 **[百度统计](https://tongji.baidu.com/)**
+* 支持 **[Umami Analytics](https://umami.is/)**
+* 支持 **[Plausible Analytics](https://plausible.io/)**
+* 支持 **[Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics)**
+* 支持 **[Splitbee Analytics](https://splitbee.io)**
 * 支持搜索引擎的**网站验证** (Google, Bind, Yandex and Baidu)
 * 支持所有第三方库的 **CDN**
-* 基于 [lazysizes](https://github.com/aFarkas/lazysizes) 自动转换图片为**懒加载**
 
 ### 外观和布局
 
@@ -111,10 +120,13 @@ DoIt 主题增加了许多新的功能与配置项，查看[变更日志](https:
 * 支持 **[Commento](https://commento.io/)** 评论系统
 * 支持 **[Utterances](https://utteranc.es/)** 评论系统
 * 支持 **[Twikoo](https://twikoo.js.org/)** 评论系统
+* 支持 **[Vssue](https://vssue.js.org/)** 评论系统
+* 支持 **[Remark42](https://remark42.com/)** 评论系统
+* 支持 **[giscus](https://giscus.app/)** 评论系统
 
 ### 扩展功能
 
-* 支持基于 [Lunr.js](https://lunrjs.com/) 或 [algolia](https://www.algolia.com/) 或 [Fuse.js](https://fusejs.io/) 的**搜索**
+* 支持基于 [algolia](https://www.algolia.com/) 或 [Fuse.js](https://fusejs.io/) 的**搜索**
 * 支持 **Twemoji**
 * 支持**代码高亮**
 * 一键**复制代码**到剪贴板
@@ -184,10 +196,8 @@ DoIt 主题中用到了以下项目，感谢它们的作者：
 * [Simple Icons](https://github.com/simple-icons/simple-icons)
 * [Animate.css](https://daneden.github.io/animate.css/)
 * [autocomplete.js](https://github.com/algolia/autocomplete.js)
-* [Lunr.js](https://lunrjs.com/)
 * [algoliasearch](https://github.com/algolia/algoliasearch-client-javascript)
 * [Fuse.js](https://fusejs.io/)
-* [lazysizes](https://github.com/aFarkas/lazysizes)
 * [object-fit-images](https://github.com/fregante/object-fit-images)
 * [Twemoji](https://github.com/twitter/twemoji)
 * [lightgallery.js](https://github.com/sachinchoolur/lightgallery.js)
@@ -204,18 +214,10 @@ DoIt 主题中用到了以下项目，感谢它们的作者：
 * [Valine](https://valine.js.org/)
 * [Waline](https://waline.js.org/)
 * [Twikoo](https://twikoo.js.org/)
+* [Vssue](https://vssue.js.org/)
 * [cookieconsent](https://github.com/osano/cookieconsent)
-* [Pjax](https://github.com/PaperStrike/Pjax)
-* [Topbar](https://github.com/buunguyen/topbar)
+* [Remark42](https://remark42.com/)
 
 ## 作者
 
 [PCloud](https://github.com/HEIGE-PCloud)
-
-## 赞助支持
-
-如果你喜爱这个主题, 请考虑给我买杯咖啡 ☕️
-
-https://www.buymeacoffee.com/PCloud
-
-谢谢! ❤️
