@@ -1,0 +1,329 @@
+<!doctype html><html lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>Android页面绘制流程 - Vee's space</title><meta name=Description content="刚刚给接触Android的时候，感觉Activity就类似iOS中的Controller，就是一个个的页面。但是其实并不是这样的，因为Android同一时间并不是只绘制一个页面，比如状态栏，其他应用的toast，悬浮球等等。所以Android中必然存在一种&#34;管家&#34;机制，负责管理所有进程的绘制行为，他就是WindowManagerService服务。"><meta property="og:title" content="Android页面绘制流程"><meta property="og:description" content="刚刚给接触Android的时候，感觉Activity就类似iOS中的Controller，就是一个个的页面。但是其实并不是这样的，因为Android同一时间并不是只绘制一个页面，比如状态栏，其他应用的toast，悬浮球等等。所以Android中必然存在一种&#34;管家&#34;机制，负责管理所有进程的绘制行为，他就是WindowManagerService服务。"><meta property="og:type" content="article"><meta property="og:url" content="https://vee-zhang.github.io/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/"><meta property="og:image" content="https://vee-zhang.github.io/logo.png"><meta property="article:section" content="posts"><meta property="article:published_time" content="2021-07-26T16:06:05+08:00"><meta property="article:modified_time" content="2021-07-26T16:06:05+08:00"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://vee-zhang.github.io/logo.png"><meta name=twitter:title content="Android页面绘制流程"><meta name=twitter:description content="刚刚给接触Android的时候，感觉Activity就类似iOS中的Controller，就是一个个的页面。但是其实并不是这样的，因为Android同一时间并不是只绘制一个页面，比如状态栏，其他应用的toast，悬浮球等等。所以Android中必然存在一种&#34;管家&#34;机制，负责管理所有进程的绘制行为，他就是WindowManagerService服务。"><meta name=application-name content="Vee's space"><meta name=apple-mobile-web-app-title content="Vee's space"><meta name=theme-color content="#f8f8f8"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://vee-zhang.github.io/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/><link rel=prev href=https://vee-zhang.github.io/view%E4%BA%8B%E4%BB%B6%E4%BD%93%E7%B3%BB/><link rel=next href=https://vee-zhang.github.io/android%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84/><link rel=stylesheet href=/lib/normalize/normalize.min.css><link rel=stylesheet href=/css/color.css><link rel=stylesheet href=/css/style.min.css><link rel=preload as=style onload='this.onload=null,this.rel="stylesheet"' href=/lib/fontawesome-free/all.min.css><noscript><link rel=stylesheet href=/lib/fontawesome-free/all.min.css></noscript><link rel=preload as=style onload='this.onload=null,this.rel="stylesheet"' href=/lib/animate/animate.min.css><noscript><link rel=stylesheet href=/lib/animate/animate.min.css></noscript><meta name=google-site-verification content="MQ8DNu27ayX6B_4ObiEDK09vGr1fdy7kOAnbd09hJk4"><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"Android页面绘制流程","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/vee-zhang.github.io\/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B\/"},"image":["https:\/\/vee-zhang.github.io\/images\/Apple-Devices-Preview.png"],"genre":"posts","keywords":"Android","wordcount":1800,"url":"https:\/\/vee-zhang.github.io\/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B\/","datePublished":"2021-07-26T16:06:05+08:00","dateModified":"2021-07-26T16:06:05+08:00","license":"This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher":{"@type":"Organization","name":"xxxx","logo":{"@type":"ImageObject","url":"https:\/\/vee-zhang.github.io\/images\/avatar.webp","width":528,"height":560}},"author":{"@type":"Person","name":"Vee Zhang"},"description":"刚刚给接触Android的时候，感觉Activity就类似iOS中的Controller，就是一个个的页面。但是其实并不是这样的，因为Android同一时间并不是只绘制一个页面，比如状态栏，其他应用的toast，悬浮球等等。所以Android中必然存在一种\"管家\"机制，负责管理所有进程的绘制行为，他就是WindowManagerService服务。"}</script><script src=//instant.page/5.1.1 defer type=module integrity=sha384-MWfCL6g1OTGsbSwfuMHc8+8J2u71/LA8dzlIN3ycajckxuZZmF+DNjdm7O6H3PSq></script></head><body header-desktop=fixed header-mobile=auto><script type=text/javascript>function setTheme(e){document.body.setAttribute("theme",e),document.documentElement.style.setProperty("color-scheme",e==="light"?"light":"dark")}function saveTheme(e){window.localStorage&&localStorage.setItem("theme",e)}function getMeta(e){const t=document.getElementsByTagName("meta");for(let n=0;n<t.length;n++)if(t[n].getAttribute("name")===e)return t[n];return""}if(window.localStorage&&localStorage.getItem("theme")){let e=localStorage.getItem("theme");e==="light"||e==="dark"||e==="black"?setTheme(e):setTheme(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}else"auto"==="light"||"auto"==="dark"||"auto"==="black"?(setTheme("auto"),saveTheme("auto")):(saveTheme("auto"),setTheme(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));let metaColors={light:"#f8f8f8",dark:"#252627",black:"#000000"};getMeta("theme-color").content=metaColors[document.body.getAttribute("theme")]</script><div id=back-to-top></div><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title="Vee's space"><span class=header-title-pre><i class='far fa-edit fa-fw'></i></span>Vee's space</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>所有文章 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/series/>系列 </a><a class=menu-item href=/about/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章标题或内容... id=search-input-desktop>
+<a href=# class="search-button search-toggle" id=search-toggle-desktop title=搜索><i class="fas fa-search fa-fw"></i></a>
+<a href=# class="search-button search-clear" id=search-clear-desktop title=清空><i class="fas fa-times-circle fa-fw"></i></a>
+<span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin"></i></span>
+</span><a href=# class="menu-item theme-select" title=切换主题><i class="fas fa-adjust fa-fw"></i>
+<select class=color-theme-select id=theme-select-desktop title=切换主题><option value=light>浅色</option><option value=dark>深色</option><option value=black>黑色</option><option value=auto>跟随系统</option></select></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title="Vee's space"><span class=header-title-pre><i class='far fa-edit fa-fw'></i></span>Vee's space</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章标题或内容... id=search-input-mobile>
+<a href=# class="search-button search-toggle" id=search-toggle-mobile title=搜索><i class="fas fa-search fa-fw"></i></a>
+<a href=# class="search-button search-clear" id=search-clear-mobile title=清空><i class="fas fa-times-circle fa-fw"></i></a>
+<span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin"></i></span></div><a href=# class=search-cancel id=search-cancel-mobile>取消</a></div><a class=menu-item href=/posts/ title>所有文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/series/ title>系列</a><a class=menu-item href=/about/ title>关于</a><a href=# class="menu-item theme-select" title=切换主题>
+<i class="fas fa-adjust fa-fw"></i>
+<select class=color-theme-select id=theme-select-mobile title=切换主题><option value=light>浅色</option><option value=dark>深色</option><option value=black>黑色</option><option value=auto>跟随系统</option></select></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>目录</h2><div class=toc-content id=toc-content-auto><nav id=TableOfContents><ul><li><a href=#window>Window</a><ul><li><a href=#window的分类>Window的分类</a></li></ul></li><li><a href=#setcontentview方法>setContentView方法</a><ul><li><a href=#创建subdecorview>创建SubDecorView</a><ul><li><a href=#ensurewindow确保window附加>ensureWindow确保Window附加</a></li><li><a href=#mwindowgetdecorview>mWindow.getDecorView()</a></li></ul></li><li><a href=#phonewiodowsetcontentviewresid>phoneWiodow.setContentView(resId)</a></li><li><a href=#当前的view层级>当前的View层级</a></li></ul></li></ul></nav></div></div><script>document.getElementsByTagName("main")[0].setAttribute("pageStyle","wide")</script><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC","true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Android页面绘制流程</h1><div class=post-meta><div class=post-meta-line><span class=post-author><i class="author fas fa-user-circle fa-fw"></i><a href=https://github.com/vee-zhang title=Author target=_blank rel="noopener noreferrer author" class=author>Vee Zhang</a>
+</span>&nbsp;<span class=post-category>收录于 </span>&nbsp;<span class=post-series>系列 <a href=/series/android%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B/><i class="far fa-list-alt fa-fw"></i>Android运行流程</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime=2021-07-26>2021-07-26</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime=2021-07-26>2021-07-26</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 1800 字&nbsp;
+<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 4 分钟&nbsp;<span id=/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/ class=leancloud_visitors data-flag-title=Android页面绘制流程>
+<i class="far fa-eye fa-fw"></i>&nbsp;<span class=leancloud-visitors-count id=twikoo_visitors></span>&nbsp;次阅读
+</span>&nbsp;</div></div><div class=featured-image><img loading=eager src=/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/Android%E8%A7%86%E5%9B%BE%E5%B1%82%E7%BA%A71.png srcset="/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/Android%E8%A7%86%E5%9B%BE%E5%B1%82%E7%BA%A71.png, /android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/Android%E8%A7%86%E5%9B%BE%E5%B1%82%E7%BA%A71.png 1.5x, /android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/Android%E8%A7%86%E5%9B%BE%E5%B1%82%E7%BA%A71.png 2x" sizes=auto alt=/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/Android%E8%A7%86%E5%9B%BE%E5%B1%82%E7%BA%A71.png title='刚刚给接触Android的时候，感觉Activity就类似iOS中的Controller，就是一个个的页面。但是其实并不是这样的，因为Android同一时间并不是只绘制一个页面，比如状态栏，其他应用的toast，悬浮球等等。所以Android中必然存在一种"管家"机制，负责管理所有进程的绘制行为，他就是WindowManagerService服务。' height=1132 width=736></div><div class="details toc" id=toc-static kept><div class="details-summary toc-title"><span>目录</span>
+<span><i class="details-icon fas fa-angle-right"></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#window>Window</a><ul><li><a href=#window的分类>Window的分类</a></li></ul></li><li><a href=#setcontentview方法>setContentView方法</a><ul><li><a href=#创建subdecorview>创建SubDecorView</a><ul><li><a href=#ensurewindow确保window附加>ensureWindow确保Window附加</a></li><li><a href=#mwindowgetdecorview>mWindow.getDecorView()</a></li></ul></li><li><a href=#phonewiodowsetcontentviewresid>phoneWiodow.setContentView(resId)</a></li><li><a href=#当前的view层级>当前的View层级</a></li></ul></li></ul></nav></div></div><div class=content id=content><h2 id=window class=headerLink><a href=#window class=header-mark></a>Window</h2><p>Activity、Window、DecorView三者一一对应。</p><h3 id=window的分类 class=headerLink><a href=#window%e7%9a%84%e5%88%86%e7%b1%bb class=header-mark></a>Window的分类</h3><ol><li>普通window，z轴范围1~99；</li><li>子window，z轴范围1000~1999，需要依附在父window中，比如dialog；</li><li>系统window，z轴范围2000~29999，比如状态栏、toast、键盘等。</li></ol><h2 id=setcontentview方法 class=headerLink><a href=#setcontentview%e6%96%b9%e6%b3%95 class=header-mark></a>setContentView方法</h2><p>这里直接看Android30版本，AndroidX包下的activity:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span> <span class=kd>class</span> <span class=nc>AppCompatActivity</span> <span class=kd>extends</span> <span class=n>FragmentActivity</span> <span class=kd>implements</span> <span class=n>AppCompatCallback</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>TaskStackBuilder</span><span class=o>.</span><span class=na>SupportParentable</span><span class=o>,</span> <span class=n>ActionBarDrawerToggle</span><span class=o>.</span><span class=na>DelegateProvider</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@Override</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kt>void</span> <span class=nf>setContentView</span><span class=o>(</span><span class=nd>@LayoutRes</span> <span class=kt>int</span> <span class=n>layoutResID</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>getDelegate</span><span class=o>().</span><span class=na>setContentView</span><span class=o>(</span><span class=n>layoutResID</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>我们的Activity重写了AppCompatActivity的<code>onCreate</code>方法，并且直接调用了父级的<code>setContentView</code>方法，这个方法有三个重载：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=nd>@Override</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kt>void</span> <span class=nf>setContentView</span><span class=o>(</span><span class=n>View</span> <span class=n>view</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>getDelegate</span><span class=o>().</span><span class=na>setContentView</span><span class=o>(</span><span class=n>view</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>重点要看一下这个<code>getDelegate()</code>方法：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>//单例创建
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=nd>@NonNull</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=n>AppCompatDelegate</span> <span class=nf>getDelegate</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=o>(</span><span class=n>mDelegate</span> <span class=o>==</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>mDelegate</span> <span class=o>=</span> <span class=n>AppCompatDelegate</span><span class=o>.</span><span class=na>create</span><span class=o>(</span><span class=k>this</span><span class=o>,</span> <span class=k>this</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>mDelegate</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@NonNull</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=n>AppCompatDelegate</span> <span class=nf>create</span><span class=o>(</span><span class=nd>@NonNull</span> <span class=n>Activity</span> <span class=n>activity</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>        <span class=nd>@Nullable</span> <span class=n>AppCompatCallback</span> <span class=n>callback</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=k>new</span> <span class=n>AppCompatDelegateImpl</span><span class=o>(</span><span class=n>activity</span><span class=o>,</span> <span class=n>callback</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>每一个Activity对象都持有一个单例的代理对象，setContent其实是由它来完成的。为什么要搞个代理呢？因为不同版本的系统，使用了不同包名下的Activity。</p><p>接下来看<code>AppCompatDelegateImpl</code>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=nd>@Override</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kt>void</span> <span class=nf>setContentView</span><span class=o>(</span><span class=n>View</span> <span class=n>v</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>//确保存在decor
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>ensureSubDecor</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=c1>//找到decorView中id为container容器
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>ViewGroup</span> <span class=n>contentParent</span> <span class=o>=</span> <span class=n>mSubDecor</span><span class=o>.</span><span class=na>findViewById</span><span class=o>(</span><span class=n>android</span><span class=o>.</span><span class=na>R</span><span class=o>.</span><span class=na>id</span><span class=o>.</span><span class=na>content</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=c1>//清空所有view
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>contentParent</span><span class=o>.</span><span class=na>removeAllViews</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=c1>//把我们传递的view附加上去
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>contentParent</span><span class=o>.</span><span class=na>addView</span><span class=o>(</span><span class=n>v</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=c1>//回调
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>mAppCompatWindowCallback</span><span class=o>.</span><span class=na>getWrapped</span><span class=o>().</span><span class=na>onContentChanged</span><span class=o>();</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=创建subdecorview class=headerLink><a href=#%e5%88%9b%e5%bb%basubdecorview class=header-mark></a>创建SubDecorView</h3><p>在这里可以看出来，每个Activity中都存在一个<code>SubDecorView</code>，并且SubDecorView中存在一个id为&rsquo;android.R.id.content&rsquo;的ViewGroup。</p><p>继续看它是怎么确保SubDecor的：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>private</span> <span class=kt>void</span> <span class=nf>ensureSubDecor</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=o>(!</span><span class=n>mSubDecorInstalled</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1>//根据标志位判断，按需创建Decor
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=n>mSubDecor</span> <span class=o>=</span> <span class=n>createSubDecor</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=o>...</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>private</span> <span class=n>ViewGroup</span> <span class=nf>createSubDecor</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=o>...</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// 重点是这里，确保window的存在
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>ensureWindow</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=n>mWindow</span><span class=o>.</span><span class=na>getDecorView</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>//根据风格主题从对应的模板填充SubDecorView
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=o>(!</span><span class=n>mWindowNoTitle</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=o>(</span><span class=n>mIsFloating</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>subDecor</span> <span class=o>=</span> <span class=o>(</span><span class=n>ViewGroup</span><span class=o>)</span> <span class=n>inflater</span><span class=o>.</span><span class=na>inflate</span><span class=o>(</span>
+</span></span><span class=line><span class=cl>                    <span class=n>R</span><span class=o>.</span><span class=na>layout</span><span class=o>.</span><span class=na>abc_dialog_title_material</span><span class=o>,</span> <span class=kc>null</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>            <span class=o>...</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span> <span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=n>mHasActionBar</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=o>...</span>
+</span></span><span class=line><span class=cl>            <span class=n>subDecor</span> <span class=o>=</span> <span class=o>(</span><span class=n>ViewGroup</span><span class=o>)</span> <span class=n>LayoutInflater</span><span class=o>.</span><span class=na>from</span><span class=o>(</span><span class=n>themedContext</span><span class=o>)</span>
+</span></span><span class=line><span class=cl>                    <span class=o>.</span><span class=na>inflate</span><span class=o>(</span><span class=n>R</span><span class=o>.</span><span class=na>layout</span><span class=o>.</span><span class=na>abc_screen_toolbar</span><span class=o>,</span> <span class=kc>null</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>            <span class=o>...</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=o>(</span><span class=n>mOverlayActionMode</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>subDecor</span> <span class=o>=</span> <span class=o>(</span><span class=n>ViewGroup</span><span class=o>)</span> <span class=n>inflater</span><span class=o>.</span><span class=na>inflate</span><span class=o>(</span>
+</span></span><span class=line><span class=cl>                    <span class=n>R</span><span class=o>.</span><span class=na>layout</span><span class=o>.</span><span class=na>abc_screen_simple_overlay_action_mode</span><span class=o>,</span> <span class=kc>null</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>subDecor</span> <span class=o>=</span> <span class=o>(</span><span class=n>ViewGroup</span><span class=o>)</span> <span class=n>inflater</span><span class=o>.</span><span class=na>inflate</span><span class=o>(</span><span class=n>R</span><span class=o>.</span><span class=na>layout</span><span class=o>.</span><span class=na>abc_screen_simple</span><span class=o>,</span> <span class=kc>null</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>mWindow</span><span class=o>.</span><span class=na>setContentView</span><span class=o>(</span><span class=n>subDecor</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=o>...</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><h4 id=ensurewindow确保window附加 class=headerLink><a href=#ensurewindow%e7%a1%ae%e4%bf%9dwindow%e9%99%84%e5%8a%a0 class=header-mark></a>ensureWindow确保Window附加</h4><p>在<code>AppCompatDelegateImpl</code>中，在setContentView的时候，会先检查是否存在DecorView，然后按需创建Decor，在创建Decor的时候又去检查是否持有window，然后按需附加Window。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>private</span> <span class=kt>void</span> <span class=nf>ensureWindow</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=o>(</span><span class=n>mWindow</span> <span class=o>==</span> <span class=kc>null</span> <span class=o>&amp;&amp;</span> <span class=n>mHost</span> <span class=k>instanceof</span> <span class=n>Activity</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>attachToWindow</span><span class=o>(((</span><span class=n>Activity</span><span class=o>)</span> <span class=n>mHost</span><span class=o>).</span><span class=na>getWindow</span><span class=o>());</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>private</span> <span class=kt>void</span> <span class=nf>attachToWindow</span><span class=o>(</span><span class=nd>@NonNull</span> <span class=n>Window</span> <span class=n>window</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=o>...</span>
+</span></span><span class=line><span class=cl>    <span class=n>mWindow</span> <span class=o>=</span> <span class=n>window</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>我追踪<code>(Activity) mHost).getWindow()</code>，发现在setContentView时，window对象已经被创建好了，那么Window是何时创建的呢？</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span> <span class=n>Window</span> <span class=nf>getWindow</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>mWindow</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@UnsupportedAppUsage</span>
+</span></span><span class=line><span class=cl><span class=kd>final</span> <span class=kt>void</span> <span class=nf>attach</span><span class=o>(</span><span class=n>Context</span> <span class=n>context</span><span class=o>,</span> <span class=n>ActivityThread</span> <span class=n>aThread</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>Instrumentation</span> <span class=n>instr</span><span class=o>,</span> <span class=n>IBinder</span> <span class=n>token</span><span class=o>,</span> <span class=kt>int</span> <span class=n>ident</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>Application</span> <span class=n>application</span><span class=o>,</span> <span class=n>Intent</span> <span class=n>intent</span><span class=o>,</span> <span class=n>ActivityInfo</span> <span class=n>info</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>CharSequence</span> <span class=n>title</span><span class=o>,</span> <span class=n>Activity</span> <span class=n>parent</span><span class=o>,</span> <span class=n>String</span> <span class=n>id</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>NonConfigurationInstances</span> <span class=n>lastNonConfigurationInstances</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>Configuration</span> <span class=n>config</span><span class=o>,</span> <span class=n>String</span> <span class=n>referrer</span><span class=o>,</span> <span class=n>IVoiceInteractor</span> <span class=n>voiceInteractor</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>Window</span> <span class=n>window</span><span class=o>,</span> <span class=n>ActivityConfigCallback</span> <span class=n>activityConfigCallback</span><span class=o>,</span> <span class=n>IBinder</span> <span class=n>assistToken</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=o>...</span>
+</span></span><span class=line><span class=cl>    <span class=n>mWindow</span> <span class=o>=</span> <span class=k>new</span> <span class=n>PhoneWindow</span><span class=o>(</span><span class=k>this</span><span class=o>,</span> <span class=n>window</span><span class=o>,</span> <span class=n>activityConfigCallback</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=o>...</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>window是Activity在<code>attach</code>的时候创建的，window本身是个接口，它的实现类是<code>PhoneWindow</code>。</p><h4 id=mwindowgetdecorview class=headerLink><a href=#mwindowgetdecorview class=header-mark></a>mWindow.getDecorView()</h4><p>继续前面的代码往下走，就遇到了这一句。我们已经知道了，这里的window其实就是phoneWindow，然后进入PhoneWindow.java文件中搜索<code>getDecorView()</code>方法：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=nd>@Override</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>final</span> <span class=nd>@NonNull</span> <span class=n>View</span> <span class=nf>getDecorView</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=o>(</span><span class=n>mDecor</span> <span class=o>==</span> <span class=kc>null</span> <span class=o>||</span> <span class=n>mForceDecorInstall</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>installDecor</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>mDecor</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>//创建和配置DecorView
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>private</span> <span class=kt>void</span> <span class=nf>installDecor</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>mForceDecorInstall</span> <span class=o>=</span> <span class=kc>false</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=o>(</span><span class=n>mDecor</span> <span class=o>==</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>//创建DecorView
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=n>mDecor</span> <span class=o>=</span> <span class=n>generateDecor</span><span class=o>(-</span><span class=mi>1</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>        <span class=o>...</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>mDecor</span><span class=o>.</span><span class=na>setWindow</span><span class=o>(</span><span class=k>this</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=o>...</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>protected</span> <span class=n>DecorView</span> <span class=nf>generateDecor</span><span class=o>(</span><span class=kt>int</span> <span class=n>featureId</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=o>...</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=k>new</span> <span class=n>DecorView</span><span class=o>(</span><span class=n>context</span><span class=o>,</span> <span class=n>featureId</span><span class=o>,</span> <span class=k>this</span><span class=o>,</span> <span class=n>getAttributes</span><span class=o>());</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>然后看这个所谓DecorView到底是个啥：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span> <span class=kd>class</span> <span class=nc>DecorView</span> <span class=kd>extends</span> <span class=n>FrameLayout</span> <span class=kd>implements</span> <span class=n>RootViewSurfaceTaker</span><span class=o>,</span> <span class=n>WindowCallbacks</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=n>TAG</span> <span class=o>=</span> <span class=s>&#34;DecorView&#34;</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>boolean</span> <span class=n>DEBUG_MEASURE</span> <span class=o>=</span> <span class=kc>false</span><span class=o>;</span>
+</span></span></code></pre></td></tr></table></div></div><p>噔噔噔噔，果然就是个FrameLayout！</p><h3 id=phonewiodowsetcontentviewresid class=headerLink><a href=#phonewiodowsetcontentviewresid class=header-mark></a>phoneWiodow.setContentView(resId)</h3><p>然后就是调用了phoneWindow的<code>setContentView(subDecor)</code>方法，这个设计模式很明显是个装饰者模式：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=nd>@Override</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kt>void</span> <span class=nf>setContentView</span><span class=o>(</span><span class=kt>int</span> <span class=n>layoutResID</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=o>(</span><span class=n>mContentParent</span> <span class=o>==</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>//检查机制，确保DeecorView一定存在
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=n>installDecor</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span> <span class=k>else</span> <span class=k>if</span> <span class=o>(!</span><span class=n>hasFeature</span><span class=o>(</span><span class=n>FEATURE_CONTENT_TRANSITIONS</span><span class=o>))</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>mContentParent</span><span class=o>.</span><span class=na>removeAllViews</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=o>(</span><span class=n>hasFeature</span><span class=o>(</span><span class=n>FEATURE_CONTENT_TRANSITIONS</span><span class=o>))</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>//播放跳转动画
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=kd>final</span> <span class=n>Scene</span> <span class=n>newScene</span> <span class=o>=</span> <span class=n>Scene</span><span class=o>.</span><span class=na>getSceneForLayout</span><span class=o>(</span><span class=n>mContentParent</span><span class=o>,</span> <span class=n>layoutResID</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>                <span class=n>getContext</span><span class=o>());</span>
+</span></span><span class=line><span class=cl>        <span class=n>transitionTo</span><span class=o>(</span><span class=n>newScene</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>      
+</span></span><span class=line><span class=cl>        <span class=n>mLayoutInflater</span><span class=o>.</span><span class=na>inflate</span><span class=o>(</span><span class=n>layoutResID</span><span class=o>,</span> <span class=n>mContentParent</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=o>...</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=当前的view层级 class=headerLink><a href=#%e5%bd%93%e5%89%8d%e7%9a%84view%e5%b1%82%e7%ba%a7 class=header-mark></a>当前的View层级</h3><p><a class=lightgallery href=/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/Android%E8%A7%86%E5%9B%BE%E5%B1%82%E7%BA%A71.png title=/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/Android%E8%A7%86%E5%9B%BE%E5%B1%82%E7%BA%A71.png data-thumbnail=/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/Android%E8%A7%86%E5%9B%BE%E5%B1%82%E7%BA%A71.png><img loading=lazy src=Android%e8%a7%86%e5%9b%be%e5%b1%82%e7%ba%a71.png srcset="/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/Android%E8%A7%86%E5%9B%BE%E5%B1%82%E7%BA%A71.png, Android%e8%a7%86%e5%9b%be%e5%b1%82%e7%ba%a71.png 1.5x, /android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/Android%E8%A7%86%E5%9B%BE%E5%B1%82%E7%BA%A71.png 2x" sizes=auto alt=/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/Android%E8%A7%86%E5%9B%BE%E5%B1%82%E7%BA%A71.png></a></p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>更新于 2021-07-26</span></div><div class=post-info-license></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=# title="分享到 Twitter" data-sharer=twitter data-url=https://vee-zhang.github.io/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/ data-title=Android页面绘制流程 data-hashtags=Android><i class="fab fa-twitter fa-fw"></i></a><a href=# title="分享到 Facebook" data-sharer=facebook data-url=https://vee-zhang.github.io/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/ data-hashtag=Android><i class="fab fa-facebook-square fa-fw"></i></a><a href=# title="分享到 Instapaper" data-sharer=instapaper data-url=https://vee-zhang.github.io/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/ data-title=Android页面绘制流程 data-description='刚刚给接触Android的时候，感觉Activity就类似iOS中的Controller，就是一个个的页面。但是其实并不是这样的，因为Android同一时间并不是只绘制一个页面，比如状态栏，其他应用的toast，悬浮球等等。所以Android中必然存在一种"管家"机制，负责管理所有进程的绘制行为，他就是WindowManagerService服务。'><i data-svg-src=/lib/simple-icons/icons/instapaper.min.svg></i></a><a href=# title="分享到 微博" data-sharer=weibo data-url=https://vee-zhang.github.io/android%E9%A1%B5%E9%9D%A2%E7%BB%98%E5%88%B6%E6%B5%81%E7%A8%8B/ data-title=Android页面绘制流程 data-ralateuid=xxxx><i class="fab fa-weibo fa-fw"></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw"></i>&nbsp;<a href=/tags/android/>Android</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/view%E4%BA%8B%E4%BB%B6%E4%BD%93%E7%B3%BB/ class=prev rel=prev title=View事件体系><i class="fas fa-angle-left fa-fw"></i>View事件体系</a>
+<a href=/android%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84/ class=next rel=next title=Android系统架构>Android系统架构<i class="fas fa-angle-right fa-fw"></i></a></div></div><div id=comments><div id=twikoo></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://twikoo.js.org/>Twikoo</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line>由 <a href=https://gohugo.io/ target=_blank rel="noopener noreferrer" title="Hugo 0.110.0">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href=https://github.com/HEIGE-PCloud/DoIt target=_blank rel="noopener noreferrer" title="DoIt 0.2.13"><i class="far fa-edit fa-fw"></i> DoIt</a></div><div class=footer-line><i class="far fa-copyright fa-fw"></i><span itemprop=copyrightYear>2021 - 2023</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://github.com/vee-zhang target=_blank rel="noopener noreferrer">Vee Zhang</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div><div class=footer-line></div><div class=footer-line></div></div><script>"serviceWorker"in navigator&&(navigator.serviceWorker.register("/sw.min.js",{scope:"/"}).then(function(){}),navigator.serviceWorker.ready.then(function(){}))</script></footer></div><div id=fixed-buttons><a href=#back-to-top id=back-to-top-button class=fixed-button title=回到顶部><i class="fas fa-arrow-up fa-fw"></i>
+</a><a href=# id=view-comments class=fixed-button title=查看评论><i class="fas fa-comment fa-fw"></i></a></div><div class=assets><script type=text/javascript>window.config={code:{copyTitle:"复制到剪贴板",maxShownLines:10},comment:{twikoo:{el:"#twikoo",envId:"https://doit-docs-comment-twikoo.vercel.app/",lang:"zh-cn"}},search:{algoliaAppID:"5YGRNRQK1G",algoliaIndex:"zh_cn_index",algoliaSearchKey:"0ff6874805de24b84aa1d5ebccad56cd",highlightTag:"em",maxResultLength:10,noResultsFound:"没有找到结果",snippetLength:50,type:"algolia"},sharerjs:!0}</script><script type=text/javascript src=/lib/twikoo/twikoo.all.min.js defer></script><script type=text/javascript src=/js/twikoo.min.js defer></script><script type=text/javascript src=/lib/clipboard/clipboard.min.js></script><script type=text/javascript src=/lib/sharer/sharer.min.js></script><script type=text/javascript src=/js/theme.min.js defer></script></div></body></html>

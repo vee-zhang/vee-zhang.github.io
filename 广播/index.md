@@ -1,0 +1,132 @@
+# 广播
+
+
+<!--more-->
+
+## 发送广播
+
+### 普通广播（无序）
+
+完全异步执行，无序。发出之后，所有广播接收器都可接收到，无法被拦截。
+
+```java
+//intent中的参数为action
+Intent intent = new Intent("com.example.dimple.BROADCAST_TEST");
+sendBroadcast(intent);
+```
+
+### 有序广播
+
+同步执行，有序。发出之后，广播接收器按照优先级顺序接收，并可拦截掉广播，类似View事件分发机制。
+
+```java
+//intent中的参数为action
+Intent intent = new Intent("com.example.dimple.BROADCAST_TEST");
+sendOrderBroadcast(intent，null);//第二个参数是与权限相关的字符串。
+```
+
+设置广播接收器的优先级：
+
+```xml
+<receiver
+    android:name=".MyReceiver"
+    android:enabled="true"
+    android:exported="true">
+    <!--注意此时有一个Priority属性-->
+    <intent-filter android:priority="100">
+        <action android:name="android.intent.action.BROADCAST_TEST"></action>
+    </intent-filter>
+</receiver>
+```
+
+## 广播接收器
+
+### 动态注册
+
+自定义一个类，继承`BroadcastReceiver`。
+
+```java
+MyBroadcastReceiver myBroadcastReceiver = new MyBroadcastReceiver();
+IntentFilter intentFilter = new IntentFilter();
+intentFilter.addAction("com.example.dimple.MY_BROADCAST");
+registerReceiver(myBroadcastReceiver,intentFilter);
+```
+
+Activity关闭时要取消注册：
+
+```java
+@Override
+protected void onDestroy() {
+    super.onDestroy();
+    unregisterReceiver(myBroadcastReceiver);
+}  
+```
+
+**如果需要接收系统的广播（比如电量变化，网络变化等等），别忘记在AndroidManifest配置文件中加上权限。**
+
+### 静态注册
+
+也是自定义一个
+
+然后不需要在代码中注册，直接在中注册即可：
+
+```xml
+<receiver
+    android:name=".MyReceiver"
+    android:enabled="true"
+    android:exported="true">
+    <!--添加action-->
+    <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED" />
+    </intent-filter>
+</receiver>
+```
+
+### 两种方式的区别
+
+- 动态注册，与Activity生命周期一致，所以只能在Activity启动后才能接收广播，并且需要手动取消注册。
+- 静态注册的广播不受程序是否启动的约束，当应用程序关闭之后，还是可以接收到广播，适合监听系统广播，甚至可以在收到广播后拉起应用（在后续版本中取消了）。
+
+## 本地广播
+
+一般我们发送的广播都是基于`intent`的`action`过滤实现的，在系统中是全局的，会引发安全性问题，安卓还提供了一套本地广播的机制，就是依靠`LocalBroadcastManager`。
+
+```kotlin 
+class MainActivity : AppCompatActivity() {
+
+    private val localBroadcastReceiver = MyReceiver()
+
+    private lateinit var lcalBroadcastManager: LocalBroadcastManager
+
+    private val action = "com.vee.intentservicetest.local_broadcast_receiver"
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        // 初始化LocalBroadcastManager
+        lcalBroadcastManager = LocalBroadcastManager.getInstance(this)
+
+        // 注册广播接收器
+        lcalBroadcastManager.registerReceiver(localBroadcastReceiver, IntentFilter(action))
+
+        // 发送广播
+        lcalBroadcastManager.sendBroadcast(Intent(action))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        //别忘了取消注册
+        lcalBroadcastManager.unregisterReceiver(localBroadcastReceiver)
+    }
+}
+
+/**
+ * 自定义的广播接收器
+ */
+class MyReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+        TODO("Not yet implemented")
+    }
+}
+```
