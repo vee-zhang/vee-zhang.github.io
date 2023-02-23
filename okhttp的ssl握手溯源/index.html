@@ -1,4 +1,4 @@
-<!doctype html><html lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>OkHttp的SSL握手溯源 - Vee's space</title><meta name=Description content="关于 DoIt 主题"><meta property="og:title" content="OkHttp的SSL握手溯源"><meta property="og:description" content><meta property="og:type" content="article"><meta property="og:url" content="https://vee-zhang.github.io/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/"><meta property="og:image" content="https://vee-zhang.github.io/logo.png"><meta property="article:section" content="posts"><meta property="article:published_time" content="2023-02-21T17:36:44+08:00"><meta property="article:modified_time" content="2023-02-21T17:36:44+08:00"><meta property="og:see_also" content="https://vee-zhang.github.io/okhttp%E7%9A%84%E9%93%BE%E6%8E%A5%E6%B1%A0/"><meta property="og:see_also" content="https://vee-zhang.github.io/okhttp%E7%9A%84%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6/"><meta property="og:see_also" content="https://vee-zhang.github.io/disklrucache/"><meta property="og:see_also" content="https://vee-zhang.github.io/bridgeinterceptor/"><meta property="og:see_also" content="https://vee-zhang.github.io/cacheinterceptor/"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://vee-zhang.github.io/logo.png"><meta name=twitter:title content="OkHttp的SSL握手溯源"><meta name=twitter:description content><meta name=application-name content="Vee's space"><meta name=apple-mobile-web-app-title content="Vee's space"><meta name=theme-color content="#f8f8f8"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://vee-zhang.github.io/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/><link rel=prev href=https://vee-zhang.github.io/%E5%B9%BF%E6%92%AD/><link rel=stylesheet href=/lib/normalize/normalize.min.css><link rel=stylesheet href=/css/color.css><link rel=stylesheet href=/css/style.min.css><link rel=preload as=style onload='this.onload=null,this.rel="stylesheet"' href=/lib/fontawesome-free/all.min.css><noscript><link rel=stylesheet href=/lib/fontawesome-free/all.min.css></noscript><link rel=preload as=style onload='this.onload=null,this.rel="stylesheet"' href=/lib/animate/animate.min.css><noscript><link rel=stylesheet href=/lib/animate/animate.min.css></noscript><meta name=google-site-verification content="MQ8DNu27ayX6B_4ObiEDK09vGr1fdy7kOAnbd09hJk4"><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"OkHttp的SSL握手溯源","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/vee-zhang.github.io\/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90\/"},"image":["https:\/\/vee-zhang.github.io\/images\/Apple-Devices-Preview.png"],"genre":"posts","keywords":"okhttp","wordcount":1,"url":"https:\/\/vee-zhang.github.io\/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90\/","datePublished":"2023-02-21T17:36:44+08:00","dateModified":"2023-02-21T17:36:44+08:00","license":"This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher":{"@type":"Organization","name":"xxxx","logo":{"@type":"ImageObject","url":"https:\/\/vee-zhang.github.io\/images\/avatar.webp","width":528,"height":560}},"author":{"@type":"Person","name":"Vee Zhang"},"description":""}</script><script src=//instant.page/5.1.1 defer type=module integrity=sha384-MWfCL6g1OTGsbSwfuMHc8+8J2u71/LA8dzlIN3ycajckxuZZmF+DNjdm7O6H3PSq></script></head><body header-desktop=fixed header-mobile=auto><script type=text/javascript>function setTheme(e){document.body.setAttribute("theme",e),document.documentElement.style.setProperty("color-scheme",e==="light"?"light":"dark")}function saveTheme(e){window.localStorage&&localStorage.setItem("theme",e)}function getMeta(e){const t=document.getElementsByTagName("meta");for(let n=0;n<t.length;n++)if(t[n].getAttribute("name")===e)return t[n];return""}if(window.localStorage&&localStorage.getItem("theme")){let e=localStorage.getItem("theme");e==="light"||e==="dark"||e==="black"?setTheme(e):setTheme(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}else"auto"==="light"||"auto"==="dark"||"auto"==="black"?(setTheme("auto"),saveTheme("auto")):(saveTheme("auto"),setTheme(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));let metaColors={light:"#f8f8f8",dark:"#252627",black:"#000000"};getMeta("theme-color").content=metaColors[document.body.getAttribute("theme")]</script><div id=back-to-top></div><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title="Vee's space"><span class=header-title-pre><i class='far fa-edit fa-fw'></i></span>Vee's space</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>所有文章 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/series/>系列 </a><a class=menu-item href=/about/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<!doctype html><html lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>OkHttp的SSL握手溯源 - Vee's space</title><meta name=Description content="关于 DoIt 主题"><meta property="og:title" content="OkHttp的SSL握手溯源"><meta property="og:description" content="最近研究PKI，想实现私钥不出TEE这个需求,需要确认okhttp中SSL认证的实现，结果说看看源码吧，让我好一顿找阿，特此记录一下过程。"><meta property="og:type" content="article"><meta property="og:url" content="https://vee-zhang.github.io/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/"><meta property="og:image" content="https://vee-zhang.github.io/logo.png"><meta property="article:section" content="posts"><meta property="article:published_time" content="2023-02-21T17:36:44+08:00"><meta property="article:modified_time" content="2023-02-21T17:36:44+08:00"><meta property="og:see_also" content="https://vee-zhang.github.io/okhttp%E7%9A%84%E9%93%BE%E6%8E%A5%E6%B1%A0/"><meta property="og:see_also" content="https://vee-zhang.github.io/okhttp%E7%9A%84%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6/"><meta property="og:see_also" content="https://vee-zhang.github.io/disklrucache/"><meta property="og:see_also" content="https://vee-zhang.github.io/bridgeinterceptor/"><meta property="og:see_also" content="https://vee-zhang.github.io/cacheinterceptor/"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://vee-zhang.github.io/logo.png"><meta name=twitter:title content="OkHttp的SSL握手溯源"><meta name=twitter:description content="最近研究PKI，想实现私钥不出TEE这个需求,需要确认okhttp中SSL认证的实现，结果说看看源码吧，让我好一顿找阿，特此记录一下过程。"><meta name=application-name content="Vee's space"><meta name=apple-mobile-web-app-title content="Vee's space"><meta name=theme-color content="#f8f8f8"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://vee-zhang.github.io/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/><link rel=prev href=https://vee-zhang.github.io/%E5%B9%BF%E6%92%AD/><link rel=stylesheet href=/lib/normalize/normalize.min.css><link rel=stylesheet href=/css/color.css><link rel=stylesheet href=/css/style.min.css><link rel=preload as=style onload='this.onload=null,this.rel="stylesheet"' href=/lib/fontawesome-free/all.min.css><noscript><link rel=stylesheet href=/lib/fontawesome-free/all.min.css></noscript><link rel=preload as=style onload='this.onload=null,this.rel="stylesheet"' href=/lib/animate/animate.min.css><noscript><link rel=stylesheet href=/lib/animate/animate.min.css></noscript><meta name=google-site-verification content="MQ8DNu27ayX6B_4ObiEDK09vGr1fdy7kOAnbd09hJk4"><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"OkHttp的SSL握手溯源","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/vee-zhang.github.io\/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90\/"},"image":["https:\/\/vee-zhang.github.io\/images\/Apple-Devices-Preview.png"],"genre":"posts","keywords":"okhttp","wordcount":2509,"url":"https:\/\/vee-zhang.github.io\/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90\/","datePublished":"2023-02-21T17:36:44+08:00","dateModified":"2023-02-21T17:36:44+08:00","license":"This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher":{"@type":"Organization","name":"xxxx","logo":{"@type":"ImageObject","url":"https:\/\/vee-zhang.github.io\/images\/avatar.webp","width":528,"height":560}},"author":{"@type":"Person","name":"Vee Zhang"},"description":""}</script><script src=//instant.page/5.1.1 defer type=module integrity=sha384-MWfCL6g1OTGsbSwfuMHc8+8J2u71/LA8dzlIN3ycajckxuZZmF+DNjdm7O6H3PSq></script></head><body header-desktop=fixed header-mobile=auto><script type=text/javascript>function setTheme(e){document.body.setAttribute("theme",e),document.documentElement.style.setProperty("color-scheme",e==="light"?"light":"dark")}function saveTheme(e){window.localStorage&&localStorage.setItem("theme",e)}function getMeta(e){const t=document.getElementsByTagName("meta");for(let n=0;n<t.length;n++)if(t[n].getAttribute("name")===e)return t[n];return""}if(window.localStorage&&localStorage.getItem("theme")){let e=localStorage.getItem("theme");e==="light"||e==="dark"||e==="black"?setTheme(e):setTheme(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}else"auto"==="light"||"auto"==="dark"||"auto"==="black"?(setTheme("auto"),saveTheme("auto")):(saveTheme("auto"),setTheme(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));let metaColors={light:"#f8f8f8",dark:"#252627",black:"#000000"};getMeta("theme-color").content=metaColors[document.body.getAttribute("theme")]</script><div id=back-to-top></div><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title="Vee's space"><span class=header-title-pre><i class='far fa-edit fa-fw'></i></span>Vee's space</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>所有文章 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/series/>系列 </a><a class=menu-item href=/about/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
 <input type=text placeholder=搜索文章标题或内容... id=search-input-desktop>
 <a href=# class="search-button search-toggle" id=search-toggle-desktop title=搜索><i class="fas fa-search fa-fw"></i></a>
 <a href=# class="search-button search-clear" id=search-clear-desktop title=清空><i class="fas fa-times-circle fa-fw"></i></a>
@@ -9,10 +9,616 @@
 <a href=# class="search-button search-clear" id=search-clear-mobile title=清空><i class="fas fa-times-circle fa-fw"></i></a>
 <span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin"></i></span></div><a href=# class=search-cancel id=search-cancel-mobile>取消</a></div><a class=menu-item href=/posts/ title>所有文章</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/series/ title>系列</a><a class=menu-item href=/about/ title>关于</a><a href=# class="menu-item theme-select" title=切换主题>
 <i class="fas fa-adjust fa-fw"></i>
-<select class=color-theme-select id=theme-select-mobile title=切换主题><option value=light>浅色</option><option value=dark>深色</option><option value=black>黑色</option><option value=auto>跟随系统</option></select></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>目录</h2><div class=toc-content id=toc-content-auto><nav id=TableOfContents></nav></div></div><script>document.getElementsByTagName("main")[0].setAttribute("pageStyle","wide")</script><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC","true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">OkHttp的SSL握手溯源</h1><div class=post-meta><div class=post-meta-line><span class=post-author><i class="author fas fa-user-circle fa-fw"></i><a href=https://github.com/vee-zhang title=Author target=_blank rel="noopener noreferrer author" class=author>Vee Zhang</a>
-</span>&nbsp;<span class=post-category>收录于 </span>&nbsp;<span class=post-category>类别 <a href=/categories/%E7%AC%AC%E4%B8%89%E6%96%B9%E6%A1%86%E6%9E%B6/><i class="far fa-folder fa-fw"></i>第三方框架</a></span>&nbsp;<span class=post-category>和</span>&nbsp;<span class=post-series>系列 <a href=/series/okhttp/><i class="far fa-list-alt fa-fw"></i>okhttp</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime=2023-02-21>2023-02-21</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime=2023-02-21>2023-02-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 1 字&nbsp;
-<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 1 分钟&nbsp;<span id=/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/ class=leancloud_visitors data-flag-title=OkHttp的SSL握手溯源>
+<select class=color-theme-select id=theme-select-mobile title=切换主题><option value=light>浅色</option><option value=dark>深色</option><option value=black>黑色</option><option value=auto>跟随系统</option></select></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>目录</h2><div class=toc-content id=toc-content-auto><nav id=TableOfContents><ul><li><a href=#sslcontext>SSLContext</a><ul><li><a href=#接下来关注service-firstservice--listgetservicetype-algorithm>接下来关注<code>Service firstService = list.getService(type, algorithm);</code></a></li></ul></li><li><a href=#最终>最终</a></li></ul></nav></div></div><script>document.getElementsByTagName("main")[0].setAttribute("pageStyle","wide")</script><script>document.getElementsByTagName("main")[0].setAttribute("autoTOC","true")</script><article class="page single"><h1 class="single-title animate__animated animate__flipInX">OkHttp的SSL握手溯源</h1><div class=post-meta><div class=post-meta-line><span class=post-author><i class="author fas fa-user-circle fa-fw"></i><a href=https://github.com/vee-zhang title=Author target=_blank rel="noopener noreferrer author" class=author>Vee Zhang</a>
+</span>&nbsp;<span class=post-category>收录于 </span>&nbsp;<span class=post-category>类别 <a href=/categories/%E7%AC%AC%E4%B8%89%E6%96%B9%E6%A1%86%E6%9E%B6/><i class="far fa-folder fa-fw"></i>第三方框架</a></span>&nbsp;<span class=post-category>和</span>&nbsp;<span class=post-series>系列 <a href=/series/okhttp/><i class="far fa-list-alt fa-fw"></i>okhttp</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw"></i>&nbsp;<time datetime=2023-02-21>2023-02-21</time>&nbsp;<i class="far fa-edit fa-fw"></i>&nbsp;<time datetime=2023-02-21>2023-02-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw"></i>&nbsp;约 2509 字&nbsp;
+<i class="far fa-clock fa-fw"></i>&nbsp;预计阅读 6 分钟&nbsp;<span id=/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/ class=leancloud_visitors data-flag-title=OkHttp的SSL握手溯源>
 <i class="far fa-eye fa-fw"></i>&nbsp;<span class=leancloud-visitors-count id=twikoo_visitors></span>&nbsp;次阅读
 </span>&nbsp;</div></div><div class="details toc" id=toc-static kept><div class="details-summary toc-title"><span>目录</span>
-<span><i class="details-icon fas fa-angle-right"></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents></nav></div></div><div class=content id=content><p>TODO</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>更新于 2023-02-21</span></div><div class=post-info-license></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=# title="分享到 Twitter" data-sharer=twitter data-url=https://vee-zhang.github.io/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/ data-title=OkHttp的SSL握手溯源 data-hashtags=okhttp><i class="fab fa-twitter fa-fw"></i></a><a href=# title="分享到 Facebook" data-sharer=facebook data-url=https://vee-zhang.github.io/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/ data-hashtag=okhttp><i class="fab fa-facebook-square fa-fw"></i></a><a href=# title="分享到 Instapaper" data-sharer=instapaper data-url=https://vee-zhang.github.io/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/ data-title=OkHttp的SSL握手溯源 data-description><i data-svg-src=/lib/simple-icons/icons/instapaper.min.svg></i></a><a href=# title="分享到 微博" data-sharer=weibo data-url=https://vee-zhang.github.io/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/ data-title=OkHttp的SSL握手溯源 data-ralateuid=xxxx><i class="fab fa-weibo fa-fw"></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw"></i>&nbsp;<a href=/tags/okhttp/>okhttp</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/%E5%B9%BF%E6%92%AD/ class=prev rel=prev title=广播><i class="fas fa-angle-left fa-fw"></i>广播</a></div></div><div id=comments><div id=twikoo></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://twikoo.js.org/>Twikoo</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line>由 <a href=https://gohugo.io/ target=_blank rel="noopener noreferrer" title="Hugo 0.110.0">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href=https://github.com/HEIGE-PCloud/DoIt target=_blank rel="noopener noreferrer" title="DoIt 0.2.13"><i class="far fa-edit fa-fw"></i> DoIt</a></div><div class=footer-line><i class="far fa-copyright fa-fw"></i><span itemprop=copyrightYear>2021 - 2023</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://github.com/vee-zhang target=_blank rel="noopener noreferrer">Vee Zhang</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div><div class=footer-line></div><div class=footer-line></div></div><script>"serviceWorker"in navigator&&(navigator.serviceWorker.register("/sw.min.js",{scope:"/"}).then(function(){}),navigator.serviceWorker.ready.then(function(){}))</script></footer></div><div id=fixed-buttons><a href=#back-to-top id=back-to-top-button class=fixed-button title=回到顶部><i class="fas fa-arrow-up fa-fw"></i>
+<span><i class="details-icon fas fa-angle-right"></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#sslcontext>SSLContext</a><ul><li><a href=#接下来关注service-firstservice--listgetservicetype-algorithm>接下来关注<code>Service firstService = list.getService(type, algorithm);</code></a></li></ul></li><li><a href=#最终>最终</a></li></ul></nav></div></div><div class=content id=content><p>最近研究PKI，想实现私钥不出TEE这个需求,需要确认okhttp中SSL认证的实现，结果说看看源码吧，让我好一顿找阿，特此记录一下过程。</p><p>Okhttp添加自签名证书方法:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=n>OkHttpClient</span><span class=o>.</span><span class=na>Builder</span> <span class=n>builder</span> <span class=o>=</span> <span class=k>new</span> <span class=n>OkHttpClient</span><span class=o>.</span><span class=na>Builder</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 添加自定义的SSLSocketFactory和X509TrustManager
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=n>builder</span><span class=o>.</span><span class=na>sslSocketFactory</span><span class=o>(</span><span class=n>sslInput</span><span class=o>.</span><span class=na>mSSLSocketFactory</span><span class=o>,</span> <span class=n>sslInput</span><span class=o>.</span><span class=na>mX509TrustManager</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 域名验证
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=n>builder</span><span class=o>.</span><span class=na>hostnameVerifier</span><span class=o>((</span><span class=n>hostname</span><span class=o>,</span> <span class=n>session</span><span class=o>)</span> <span class=o>-&gt;</span>
+</span></span><span class=line><span class=cl>        <span class=kc>true</span>
+</span></span><span class=line><span class=cl><span class=o>);</span>
+</span></span></code></pre></td></tr></table></div></div><p>最主要的其实就是<code>builder.sslSocketFactory</code>函数，由于是建造者模式，那么OkhttpClient.Builder设置了属性，最终在调用<code>builder.build()</code>函数时，一定会把builder的属性赋值给父类<code>OkhttpClient</code>，追踪<code>builder.build()</code>函数，最终调用<code>OkhttpClient</code>的构造函数，其中有一段逻辑：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=k>if</span> <span class=o>(</span><span class=n>builder</span><span class=o>.</span><span class=na>sslSocketFactory</span> <span class=o>!=</span> <span class=kc>null</span> <span class=o>||</span> <span class=o>!</span><span class=n>isTLS</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>//如果builder设置了sslSocketFactory就用builder的
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>this</span><span class=o>.</span><span class=na>sslSocketFactory</span> <span class=o>=</span> <span class=n>builder</span><span class=o>.</span><span class=na>sslSocketFactory</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>this</span><span class=o>.</span><span class=na>certificateChainCleaner</span> <span class=o>=</span> <span class=n>builder</span><span class=o>.</span><span class=na>certificateChainCleaner</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// 如果没有设置过builder的ssSocketFactory就用系统默认的
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>X509TrustManager</span> <span class=n>trustManager</span> <span class=o>=</span> <span class=n>systemDefaultTrustManager</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=k>this</span><span class=o>.</span><span class=na>sslSocketFactory</span> <span class=o>=</span> <span class=n>systemDefaultSslSocketFactory</span><span class=o>(</span><span class=n>trustManager</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>this</span><span class=o>.</span><span class=na>certificateChainCleaner</span> <span class=o>=</span> <span class=n>CertificateChainCleaner</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>trustManager</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>我们主要关注的就是系统默认的<code>systemDefaultSslSocketFactory(trustManager)</code>。</p><p>继续追踪：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>private</span> <span class=n>SSLSocketFactory</span> <span class=nf>systemDefaultSslSocketFactory</span><span class=o>(</span><span class=n>X509TrustManager</span> <span class=n>trustManager</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>try</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>      <span class=c1>// 获取到平台的SSLContext
+</span></span></span><span class=line><span class=cl><span class=c1></span>      <span class=n>SSLContext</span> <span class=n>sslContext</span> <span class=o>=</span> <span class=n>Platform</span><span class=o>.</span><span class=na>get</span><span class=o>().</span><span class=na>getSSLContext</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>      <span class=n>sslContext</span><span class=o>.</span><span class=na>init</span><span class=o>(</span><span class=kc>null</span><span class=o>,</span> <span class=k>new</span> <span class=n>TrustManager</span><span class=o>[]</span> <span class=o>{</span> <span class=n>trustManager</span> <span class=o>},</span> <span class=kc>null</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>      <span class=k>return</span> <span class=n>sslContext</span><span class=o>.</span><span class=na>getSocketFactory</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>GeneralSecurityException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>      <span class=k>throw</span> <span class=n>assertionError</span><span class=o>(</span><span class=s>&#34;No System TLS&#34;</span><span class=o>,</span> <span class=n>e</span><span class=o>);</span> <span class=c1>// The system has no TLS. Just give up.
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>  <span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>这里就看到了Okhttp的跨平台思路，简单看一下<code>Platform.get()</code>的逻辑：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span> <span class=kd>class</span> <span class=nc>Platform</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=c1>// 静态加载方式
+</span></span></span><span class=line><span class=cl><span class=c1></span>  <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>Platform</span> <span class=n>PLATFORM</span> <span class=o>=</span> <span class=n>findPlatform</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=kd>public</span> <span class=kd>static</span> <span class=n>Platform</span> <span class=nf>get</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>PLATFORM</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>  <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=kd>private</span> <span class=kd>static</span> <span class=n>Platform</span> <span class=nf>findPlatform</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// 优先加载安卓平台
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>Platform</span> <span class=n>android</span> <span class=o>=</span> <span class=n>AndroidPlatform</span><span class=o>.</span><span class=na>buildIfSupported</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=o>(</span><span class=n>android</span> <span class=o>!=</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>      <span class=k>return</span> <span class=n>android</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// 其他的都是jdk中的安全策略
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=o>...</span>
+</span></span><span class=line><span class=cl>  <span class=o>}</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><blockquote><p>那么从这里的逻辑可以看到，各个平台的安全策略可能是不一致的。</p></blockquote><p>那么OKHttp是怎么加载安卓平台的呢：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=n>Platform</span> <span class=nf>buildIfSupported</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Attempt to find Android 2.3+ APIs.
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>try</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>Class</span><span class=o>&lt;?&gt;</span> <span class=n>sslParametersClass</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>try</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>sslParametersClass</span> <span class=o>=</span> <span class=n>Class</span><span class=o>.</span><span class=na>forName</span><span class=o>(</span><span class=s>&#34;com.android.org.conscrypt.SSLParametersImpl&#34;</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>      <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>ClassNotFoundException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// Older platform before being unbundled.
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=n>sslParametersClass</span> <span class=o>=</span> <span class=n>Class</span><span class=o>.</span><span class=na>forName</span><span class=o>(</span>
+</span></span><span class=line><span class=cl>            <span class=s>&#34;org.apache.harmony.xnet.provider.jsse.SSLParametersImpl&#34;</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>      <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>      <span class=o>...</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>      <span class=k>return</span> <span class=k>new</span> <span class=n>AndroidPlatform</span><span class=o>(</span><span class=n>sslParametersClass</span><span class=o>,</span> <span class=n>setUseSessionTickets</span><span class=o>,</span> <span class=n>setHostname</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>          <span class=n>getAlpnSelectedProtocol</span><span class=o>,</span> <span class=n>setAlpnProtocols</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>ClassNotFoundException</span> <span class=n>ignored</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>      <span class=c1>// This isn&#39;t an Android runtime.
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=kc>null</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>  <span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>主要是通过hook系统中的<code>com.android.org.conscrypt.SSLParametersImpl</code>。可以先记住这个类，暂时跳过这里。</p><h2 id=sslcontext class=headerLink><a href=#sslcontext class=header-mark></a>SSLContext</h2><p>我们继续来看<code>SSLContext sslContext = Platform.get().getSSLContext()</code>，向里面追踪：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>sun.security.jca.GetInstance</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=n>SSLContext</span> <span class=nf>getSSLContext</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>  <span class=k>try</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>SSLContext</span><span class=o>.</span><span class=na>getInstance</span><span class=o>(</span><span class=s>&#34;TLS&#34;</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>  <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>NoSuchAlgorithmException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>throw</span> <span class=k>new</span> <span class=n>IllegalStateException</span><span class=o>(</span><span class=s>&#34;No TLS provider&#34;</span><span class=o>,</span> <span class=n>e</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>  <span class=o>}</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=n>SSLContext</span> <span class=nf>getInstance</span><span class=o>(</span><span class=n>String</span> <span class=n>protocol</span><span class=o>)</span>
+</span></span><span class=line><span class=cl>            <span class=kd>throws</span> <span class=n>NoSuchAlgorithmException</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>GetInstance</span><span class=o>.</span><span class=na>Instance</span> <span class=n>instance</span> <span class=o>=</span> <span class=n>GetInstance</span><span class=o>.</span><span class=na>getInstance</span>
+</span></span><span class=line><span class=cl>            <span class=o>(</span><span class=s>&#34;SSLContext&#34;</span><span class=o>,</span> <span class=n>SSLContextSpi</span><span class=o>.</span><span class=na>class</span><span class=o>,</span> <span class=n>protocol</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=k>new</span> <span class=n>SSLContext</span><span class=o>((</span><span class=n>SSLContextSpi</span><span class=o>)</span><span class=n>instance</span><span class=o>.</span><span class=na>impl</span><span class=o>,</span> <span class=n>instance</span><span class=o>.</span><span class=na>provider</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>            <span class=n>protocol</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>发现GetInstance.Instance.impl是<code>SSLContextSpi</code>类型。</p><p>到这里<code>GetInstance</code>的源码无法查看，是因为我们没有下载<code>sun.security.jca.GetInstance</code>的源码，但是在AOSP中是可以搜索到的,<a href=GetInstance.java rel>文件在此</a>。</p><p>核心方法：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm> * @param type = &#34;SSLContext&#34;
+</span></span></span><span class=line><span class=cl><span class=cm> * @param clazz = SSLContextSpi.class
+</span></span></span><span class=line><span class=cl><span class=cm> * @param algorithm = &#34;TLS&#34;
+</span></span></span><span class=line><span class=cl><span class=cm> **/</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=n>Instance</span> <span class=nf>getInstance</span><span class=o>(</span><span class=n>String</span> <span class=n>type</span><span class=o>,</span> <span class=n>Class</span><span class=o>&lt;?&gt;</span> <span class=n>clazz</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>String</span> <span class=n>algorithm</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>NoSuchAlgorithmException</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>ProviderList</span> <span class=n>list</span> <span class=o>=</span> <span class=n>Providers</span><span class=o>.</span><span class=na>getProviderList</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=n>Service</span> <span class=n>firstService</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>getService</span><span class=o>(</span><span class=n>type</span><span class=o>,</span> <span class=n>algorithm</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=o>(</span><span class=n>firstService</span> <span class=o>==</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>throw</span> <span class=k>new</span> <span class=n>NoSuchAlgorithmException</span>
+</span></span><span class=line><span class=cl>                <span class=o>(</span><span class=n>algorithm</span> <span class=o>+</span> <span class=s>&#34; &#34;</span> <span class=o>+</span> <span class=n>type</span> <span class=o>+</span> <span class=s>&#34; not available&#34;</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=n>NoSuchAlgorithmException</span> <span class=n>failure</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>try</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=n>getInstance</span><span class=o>(</span><span class=n>firstService</span><span class=o>,</span> <span class=n>clazz</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>NoSuchAlgorithmException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>failure</span> <span class=o>=</span> <span class=n>e</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=o>(</span><span class=n>Service</span> <span class=n>s</span> <span class=o>:</span> <span class=n>list</span><span class=o>.</span><span class=na>getServices</span><span class=o>(</span><span class=n>type</span><span class=o>,</span> <span class=n>algorithm</span><span class=o>))</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=o>(</span><span class=n>s</span> <span class=o>==</span> <span class=n>firstService</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// do not retry initial failed service
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=k>continue</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>        <span class=k>try</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>return</span> <span class=n>getInstance</span><span class=o>(</span><span class=n>s</span><span class=o>,</span> <span class=n>clazz</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>NoSuchAlgorithmException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>failure</span> <span class=o>=</span> <span class=n>e</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>throw</span> <span class=n>failure</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>这里主要是用参数中的type与algorithm去做个命中匹配，具体是通过<code>Providers</code>的<code>Providers.getProviderList()</code>方法完成,而这个类同样位于<code>sun.security.jca</code>包中，在AOSP内是可见的：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=n>ProviderList</span> <span class=nf>getProviderList</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>ProviderList</span> <span class=n>list</span> <span class=o>=</span> <span class=n>getThreadProviderList</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=o>(</span><span class=n>list</span> <span class=o>==</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>list</span> <span class=o>=</span> <span class=n>getSystemProviderList</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>list</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>private</span> <span class=kd>static</span> <span class=kt>void</span> <span class=nf>setSystemProviderList</span><span class=o>(</span><span class=n>ProviderList</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>providerList</span> <span class=o>=</span> <span class=n>list</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>可惜的是，AOSP中并没有找到调用<code>setSystemProviderList()</code>函数的地方，那就有可能是外部hook调用了。</p><h3 id=接下来关注service-firstservice--listgetservicetype-algorithm class=headerLink><a href=#%e6%8e%a5%e4%b8%8b%e6%9d%a5%e5%85%b3%e6%b3%a8service-firstservice--listgetservicetype-algorithm class=header-mark></a>接下来关注<code>Service firstService = list.getService(type, algorithm);</code></h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>Service</span><span class=o>&gt;</span> <span class=nf>getServices</span><span class=o>(</span><span class=n>String</span> <span class=n>type</span><span class=o>,</span> <span class=n>String</span> <span class=n>algorithm</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=k>new</span> <span class=n>ServiceList</span><span class=o>(</span><span class=n>type</span><span class=o>,</span> <span class=n>algorithm</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>&mldr;..</p><h2 id=最终 class=headerLink><a href=#%e6%9c%80%e7%bb%88 class=header-mark></a>最终</h2><p>是在<code>external/conscrypt/common/src/main/java/org/conscrypt/NativeSsl.java</code>中有具体的握手逻辑，最终是调用：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=n>NativeCrypto</span><span class=o>.</span><span class=na>SSL_do_handshake</span><span class=o>(</span><span class=n>ssl</span><span class=o>,</span> <span class=k>this</span><span class=o>,</span> <span class=n>fd</span><span class=o>,</span> <span class=n>handshakeCallbacks</span><span class=o>,</span> <span class=n>timeoutMillis</span><span class=o>);</span>
+</span></span></code></pre></td></tr></table></div></div><p>而这个是个Native方法，具体实现是在<code>external/conscrypt/common/src/jni/main/cpp/conscrypt/native_crypto.cc</code>中实现。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>  1
+</span><span class=lnt>  2
+</span><span class=lnt>  3
+</span><span class=lnt>  4
+</span><span class=lnt>  5
+</span><span class=lnt>  6
+</span><span class=lnt>  7
+</span><span class=lnt>  8
+</span><span class=lnt>  9
+</span><span class=lnt> 10
+</span><span class=lnt> 11
+</span><span class=lnt> 12
+</span><span class=lnt> 13
+</span><span class=lnt> 14
+</span><span class=lnt> 15
+</span><span class=lnt> 16
+</span><span class=lnt> 17
+</span><span class=lnt> 18
+</span><span class=lnt> 19
+</span><span class=lnt> 20
+</span><span class=lnt> 21
+</span><span class=lnt> 22
+</span><span class=lnt> 23
+</span><span class=lnt> 24
+</span><span class=lnt> 25
+</span><span class=lnt> 26
+</span><span class=lnt> 27
+</span><span class=lnt> 28
+</span><span class=lnt> 29
+</span><span class=lnt> 30
+</span><span class=lnt> 31
+</span><span class=lnt> 32
+</span><span class=lnt> 33
+</span><span class=lnt> 34
+</span><span class=lnt> 35
+</span><span class=lnt> 36
+</span><span class=lnt> 37
+</span><span class=lnt> 38
+</span><span class=lnt> 39
+</span><span class=lnt> 40
+</span><span class=lnt> 41
+</span><span class=lnt> 42
+</span><span class=lnt> 43
+</span><span class=lnt> 44
+</span><span class=lnt> 45
+</span><span class=lnt> 46
+</span><span class=lnt> 47
+</span><span class=lnt> 48
+</span><span class=lnt> 49
+</span><span class=lnt> 50
+</span><span class=lnt> 51
+</span><span class=lnt> 52
+</span><span class=lnt> 53
+</span><span class=lnt> 54
+</span><span class=lnt> 55
+</span><span class=lnt> 56
+</span><span class=lnt> 57
+</span><span class=lnt> 58
+</span><span class=lnt> 59
+</span><span class=lnt> 60
+</span><span class=lnt> 61
+</span><span class=lnt> 62
+</span><span class=lnt> 63
+</span><span class=lnt> 64
+</span><span class=lnt> 65
+</span><span class=lnt> 66
+</span><span class=lnt> 67
+</span><span class=lnt> 68
+</span><span class=lnt> 69
+</span><span class=lnt> 70
+</span><span class=lnt> 71
+</span><span class=lnt> 72
+</span><span class=lnt> 73
+</span><span class=lnt> 74
+</span><span class=lnt> 75
+</span><span class=lnt> 76
+</span><span class=lnt> 77
+</span><span class=lnt> 78
+</span><span class=lnt> 79
+</span><span class=lnt> 80
+</span><span class=lnt> 81
+</span><span class=lnt> 82
+</span><span class=lnt> 83
+</span><span class=lnt> 84
+</span><span class=lnt> 85
+</span><span class=lnt> 86
+</span><span class=lnt> 87
+</span><span class=lnt> 88
+</span><span class=lnt> 89
+</span><span class=lnt> 90
+</span><span class=lnt> 91
+</span><span class=lnt> 92
+</span><span class=lnt> 93
+</span><span class=lnt> 94
+</span><span class=lnt> 95
+</span><span class=lnt> 96
+</span><span class=lnt> 97
+</span><span class=lnt> 98
+</span><span class=lnt> 99
+</span><span class=lnt>100
+</span><span class=lnt>101
+</span><span class=lnt>102
+</span><span class=lnt>103
+</span><span class=lnt>104
+</span><span class=lnt>105
+</span><span class=lnt>106
+</span><span class=lnt>107
+</span><span class=lnt>108
+</span><span class=lnt>109
+</span><span class=lnt>110
+</span><span class=lnt>111
+</span><span class=lnt>112
+</span><span class=lnt>113
+</span><span class=lnt>114
+</span><span class=lnt>115
+</span><span class=lnt>116
+</span><span class=lnt>117
+</span><span class=lnt>118
+</span><span class=lnt>119
+</span><span class=lnt>120
+</span><span class=lnt>121
+</span><span class=lnt>122
+</span><span class=lnt>123
+</span><span class=lnt>124
+</span><span class=lnt>125
+</span><span class=lnt>126
+</span><span class=lnt>127
+</span><span class=lnt>128
+</span><span class=lnt>129
+</span><span class=lnt>130
+</span><span class=lnt>131
+</span><span class=lnt>132
+</span><span class=lnt>133
+</span><span class=lnt>134
+</span><span class=lnt>135
+</span><span class=lnt>136
+</span><span class=lnt>137
+</span><span class=lnt>138
+</span><span class=lnt>139
+</span><span class=lnt>140
+</span><span class=lnt>141
+</span><span class=lnt>142
+</span><span class=lnt>143
+</span><span class=lnt>144
+</span><span class=lnt>145
+</span><span class=lnt>146
+</span><span class=lnt>147
+</span><span class=lnt>148
+</span><span class=lnt>149
+</span><span class=lnt>150
+</span><span class=lnt>151
+</span><span class=lnt>152
+</span><span class=lnt>153
+</span><span class=lnt>154
+</span><span class=lnt>155
+</span><span class=lnt>156
+</span><span class=lnt>157
+</span><span class=lnt>158
+</span><span class=lnt>159
+</span><span class=lnt>160
+</span><span class=lnt>161
+</span><span class=lnt>162
+</span><span class=lnt>163
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm> * Perform SSL handshake
+</span></span></span><span class=line><span class=cl><span class=cm> */</span>
+</span></span><span class=line><span class=cl><span class=k>static</span> <span class=kt>void</span> <span class=nf>NativeCrypto_SSL_do_handshake</span><span class=p>(</span><span class=n>JNIEnv</span><span class=o>*</span> <span class=n>env</span><span class=p>,</span> <span class=n>jclass</span><span class=p>,</span> <span class=n>jlong</span> <span class=n>ssl_address</span><span class=p>,</span> <span class=n>CONSCRYPT_UNUSED</span> <span class=n>jobject</span> <span class=n>ssl_holder</span><span class=p>,</span> <span class=n>jobject</span> <span class=n>fdObject</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                          <span class=n>jobject</span> <span class=n>shc</span><span class=p>,</span> <span class=n>jint</span> <span class=n>timeout_millis</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>CHECK_ERROR_QUEUE_ON_RETURN</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>SSL</span><span class=o>*</span> <span class=n>ssl</span> <span class=o>=</span> <span class=nf>to_SSL</span><span class=p>(</span><span class=n>env</span><span class=p>,</span> <span class=n>ssl_address</span><span class=p>,</span> <span class=nb>true</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake fd=%p shc=%p timeout_millis=%d&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>,</span> <span class=n>fdObject</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>              <span class=n>shc</span><span class=p>,</span> <span class=n>timeout_millis</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>ssl</span> <span class=o>==</span> <span class=n>nullptr</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>fdObject</span> <span class=o>==</span> <span class=n>nullptr</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=nf>throwNullPointerException</span><span class=p>(</span><span class=n>env</span><span class=p>,</span> <span class=s>&#34;fd == null&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake fd == null =&gt; exception&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>shc</span> <span class=o>==</span> <span class=n>nullptr</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=nf>throwNullPointerException</span><span class=p>(</span><span class=n>env</span><span class=p>,</span> <span class=s>&#34;sslHandshakeCallbacks == null&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake sslHandshakeCallbacks == null =&gt; exception&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                  <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>NetFd</span> <span class=nf>fd</span><span class=p>(</span><span class=n>env</span><span class=p>,</span> <span class=n>fdObject</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>fd</span><span class=p>.</span><span class=nf>isClosed</span><span class=p>())</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// SocketException thrown by NetFd.isClosed
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake fd.isClosed() =&gt; exception&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>ret</span> <span class=o>=</span> <span class=nf>SSL_set_fd</span><span class=p>(</span><span class=n>ssl</span><span class=p>,</span> <span class=n>fd</span><span class=p>.</span><span class=nf>get</span><span class=p>());</span>
+</span></span><span class=line><span class=cl>    <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake s=%d&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>,</span> <span class=n>fd</span><span class=p>.</span><span class=nf>get</span><span class=p>());</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>!=</span> <span class=mi>1</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=nf>throwSSLExceptionWithSslErrors</span><span class=p>(</span><span class=n>env</span><span class=p>,</span> <span class=n>ssl</span><span class=p>,</span> <span class=n>SSL_ERROR_NONE</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                           <span class=s>&#34;Error setting the file descriptor&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake SSL_set_fd =&gt; exception&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=cm>/*
+</span></span></span><span class=line><span class=cl><span class=cm>     * Make socket non-blocking, so SSL_connect SSL_read() and SSL_write() don&#39;t hang
+</span></span></span><span class=line><span class=cl><span class=cm>     * forever and we can use select() to find out if the socket is ready.
+</span></span></span><span class=line><span class=cl><span class=cm>     */</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>conscrypt</span><span class=o>::</span><span class=n>netutil</span><span class=o>::</span><span class=nf>setBlocking</span><span class=p>(</span><span class=n>fd</span><span class=p>.</span><span class=nf>get</span><span class=p>(),</span> <span class=nb>false</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=nf>throwSSLExceptionStr</span><span class=p>(</span><span class=n>env</span><span class=p>,</span> <span class=s>&#34;Unable to make socket non blocking&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake setBlocking =&gt; exception&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>AppData</span><span class=o>*</span> <span class=n>appData</span> <span class=o>=</span> <span class=nf>toAppData</span><span class=p>(</span><span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>appData</span> <span class=o>==</span> <span class=n>nullptr</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=nf>throwSSLExceptionStr</span><span class=p>(</span><span class=n>env</span><span class=p>,</span> <span class=s>&#34;Unable to retrieve application data&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake appData =&gt; exception&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>ret</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>SslError</span> <span class=n>sslError</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=n>appData</span><span class=o>-&gt;</span><span class=n>aliveAndKicking</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>errno</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>appData</span><span class=o>-&gt;</span><span class=nf>setCallbackState</span><span class=p>(</span><span class=n>env</span><span class=p>,</span> <span class=n>shc</span><span class=p>,</span> <span class=n>fdObject</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// SocketException thrown by NetFd.isClosed
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake setCallbackState =&gt; exception&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=n>ret</span> <span class=o>=</span> <span class=nf>SSL_do_handshake</span><span class=p>(</span><span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=n>appData</span><span class=o>-&gt;</span><span class=nf>clearCallbackState</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// cert_verify_callback threw exception
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=k>if</span> <span class=p>(</span><span class=n>env</span><span class=o>-&gt;</span><span class=nf>ExceptionCheck</span><span class=p>())</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nf>ERR_clear_error</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>            <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake exception =&gt; exception&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// success case
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>==</span> <span class=mi>1</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// retry case
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=k>if</span> <span class=p>(</span><span class=n>errno</span> <span class=o>==</span> <span class=n>EINTR</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>continue</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// error case
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=n>sslError</span><span class=p>.</span><span class=nf>reset</span><span class=p>(</span><span class=n>ssl</span><span class=p>,</span> <span class=n>ret</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nf>JNI_TRACE</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                <span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake ret=%d errno=%d sslError=%d &#34;</span>
+</span></span><span class=line><span class=cl>                <span class=s>&#34;timeout_millis=%d&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                <span class=n>ssl</span><span class=p>,</span> <span class=n>ret</span><span class=p>,</span> <span class=n>errno</span><span class=p>,</span> <span class=n>sslError</span><span class=p>.</span><span class=nf>get</span><span class=p>(),</span> <span class=n>timeout_millis</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=cm>/*
+</span></span></span><span class=line><span class=cl><span class=cm>         * If SSL_do_handshake doesn&#39;t succeed due to the socket being
+</span></span></span><span class=line><span class=cl><span class=cm>         * either unreadable or unwritable, we use sslSelect to
+</span></span></span><span class=line><span class=cl><span class=cm>         * wait for it to become ready. If that doesn&#39;t happen
+</span></span></span><span class=line><span class=cl><span class=cm>         * before the specified timeout or an error occurs, we
+</span></span></span><span class=line><span class=cl><span class=cm>         * cancel the handshake. Otherwise we try the SSL_connect
+</span></span></span><span class=line><span class=cl><span class=cm>         * again.
+</span></span></span><span class=line><span class=cl><span class=cm>         */</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>sslError</span><span class=p>.</span><span class=nf>get</span><span class=p>()</span> <span class=o>==</span> <span class=n>SSL_ERROR_WANT_READ</span> <span class=o>||</span> <span class=n>sslError</span><span class=p>.</span><span class=nf>get</span><span class=p>()</span> <span class=o>==</span> <span class=n>SSL_ERROR_WANT_WRITE</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>appData</span><span class=o>-&gt;</span><span class=n>waitingThreads</span><span class=o>++</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=kt>int</span> <span class=n>selectResult</span> <span class=o>=</span> <span class=nf>sslSelect</span><span class=p>(</span><span class=n>env</span><span class=p>,</span> <span class=n>sslError</span><span class=p>.</span><span class=nf>get</span><span class=p>(),</span> <span class=n>fdObject</span><span class=p>,</span> <span class=n>appData</span><span class=p>,</span> <span class=n>timeout_millis</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=p>(</span><span class=n>selectResult</span> <span class=o>==</span> <span class=n>THROWN_EXCEPTION</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=c1>// SocketException thrown by NetFd.isClosed
+</span></span></span><span class=line><span class=cl><span class=c1></span>                <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake sslSelect =&gt; exception&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>                <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=p>(</span><span class=n>selectResult</span> <span class=o>==</span> <span class=o>-</span><span class=mi>1</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=nf>throwSSLExceptionWithSslErrors</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                        <span class=n>env</span><span class=p>,</span> <span class=n>ssl</span><span class=p>,</span> <span class=n>SSL_ERROR_SYSCALL</span><span class=p>,</span> <span class=s>&#34;handshake error&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                        <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=n>throwSSLHandshakeExceptionStr</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>                <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake selectResult == -1 =&gt; exception&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                          <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>                <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=p>(</span><span class=n>selectResult</span> <span class=o>==</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=nf>throwSocketTimeoutException</span><span class=p>(</span><span class=n>env</span><span class=p>,</span> <span class=s>&#34;SSL handshake timed out&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>                <span class=nf>ERR_clear_error</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>                <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake selectResult == 0 =&gt; exception&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                          <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>                <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// ALOGE(&#34;Unknown error %d during handshake&#34;, error);
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// clean error. See SSL_do_handshake(3SSL) man page.
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>==</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=cm>/*
+</span></span></span><span class=line><span class=cl><span class=cm>         * The other side closed the socket before the handshake could be
+</span></span></span><span class=line><span class=cl><span class=cm>         * completed, but everything is within the bounds of the TLS protocol.
+</span></span></span><span class=line><span class=cl><span class=cm>         * We still might want to find out the real reason of the failure.
+</span></span></span><span class=line><span class=cl><span class=cm>         */</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>sslError</span><span class=p>.</span><span class=nf>get</span><span class=p>()</span> <span class=o>==</span> <span class=n>SSL_ERROR_NONE</span> <span class=o>||</span>
+</span></span><span class=line><span class=cl>            <span class=p>(</span><span class=n>sslError</span><span class=p>.</span><span class=nf>get</span><span class=p>()</span> <span class=o>==</span> <span class=n>SSL_ERROR_SYSCALL</span> <span class=o>&amp;&amp;</span> <span class=n>errno</span> <span class=o>==</span> <span class=mi>0</span><span class=p>)</span> <span class=o>||</span>
+</span></span><span class=line><span class=cl>            <span class=p>(</span><span class=n>sslError</span><span class=p>.</span><span class=nf>get</span><span class=p>()</span> <span class=o>==</span> <span class=n>SSL_ERROR_ZERO_RETURN</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=nf>throwSSLHandshakeExceptionStr</span><span class=p>(</span><span class=n>env</span><span class=p>,</span> <span class=s>&#34;Connection closed by peer&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=nf>throwSSLExceptionWithSslErrors</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                    <span class=n>env</span><span class=p>,</span> <span class=n>ssl</span><span class=p>,</span> <span class=n>sslError</span><span class=p>.</span><span class=nf>release</span><span class=p>(),</span> <span class=s>&#34;SSL handshake terminated&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                    <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=n>throwSSLHandshakeExceptionStr</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake clean error =&gt; exception&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// unclean error. See SSL_do_handshake(3SSL) man page.
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=cm>/*
+</span></span></span><span class=line><span class=cl><span class=cm>         * Translate the error and throw exception. We are sure it is an error
+</span></span></span><span class=line><span class=cl><span class=cm>         * at this point.
+</span></span></span><span class=line><span class=cl><span class=cm>         */</span>
+</span></span><span class=line><span class=cl>        <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=nf>throwSSLExceptionWithSslErrors</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                <span class=n>env</span><span class=p>,</span> <span class=n>ssl</span><span class=p>,</span> <span class=n>sslError</span><span class=p>.</span><span class=nf>release</span><span class=p>(),</span> <span class=s>&#34;SSL handshake aborted&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                <span class=n>conscrypt</span><span class=o>::</span><span class=n>jniutil</span><span class=o>::</span><span class=n>throwSSLHandshakeExceptionStr</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake unclean error =&gt; exception&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=nf>JNI_TRACE</span><span class=p>(</span><span class=s>&#34;ssl=%p NativeCrypto_SSL_do_handshake =&gt; success&#34;</span><span class=p>,</span> <span class=n>ssl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>更新于 2023-02-21</span></div><div class=post-info-license></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=# title="分享到 Twitter" data-sharer=twitter data-url=https://vee-zhang.github.io/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/ data-title=OkHttp的SSL握手溯源 data-hashtags=okhttp><i class="fab fa-twitter fa-fw"></i></a><a href=# title="分享到 Facebook" data-sharer=facebook data-url=https://vee-zhang.github.io/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/ data-hashtag=okhttp><i class="fab fa-facebook-square fa-fw"></i></a><a href=# title="分享到 Instapaper" data-sharer=instapaper data-url=https://vee-zhang.github.io/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/ data-title=OkHttp的SSL握手溯源 data-description><i data-svg-src=/lib/simple-icons/icons/instapaper.min.svg></i></a><a href=# title="分享到 微博" data-sharer=weibo data-url=https://vee-zhang.github.io/okhttp%E7%9A%84ssl%E6%8F%A1%E6%89%8B%E6%BA%AF%E6%BA%90/ data-title=OkHttp的SSL握手溯源 data-ralateuid=xxxx><i class="fab fa-weibo fa-fw"></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw"></i>&nbsp;<a href=/tags/okhttp/>okhttp</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/%E5%B9%BF%E6%92%AD/ class=prev rel=prev title=广播><i class="fas fa-angle-left fa-fw"></i>广播</a></div></div><div id=comments><div id=twikoo></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://twikoo.js.org/>Twikoo</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line>由 <a href=https://gohugo.io/ target=_blank rel="noopener noreferrer" title="Hugo 0.110.0">Hugo</a> 强力驱动&nbsp;|&nbsp;主题 - <a href=https://github.com/HEIGE-PCloud/DoIt target=_blank rel="noopener noreferrer" title="DoIt 0.2.13"><i class="far fa-edit fa-fw"></i> DoIt</a></div><div class=footer-line><i class="far fa-copyright fa-fw"></i><span itemprop=copyrightYear>2021 - 2023</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://github.com/vee-zhang target=_blank rel="noopener noreferrer">Vee Zhang</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreffer" href=https://creativecommons.org/licenses/by-nc/4.0/ target=_blank>CC BY-NC 4.0</a></span></div><div class=footer-line></div><div class=footer-line></div></div><script>"serviceWorker"in navigator&&(navigator.serviceWorker.register("/sw.min.js",{scope:"/"}).then(function(){}),navigator.serviceWorker.ready.then(function(){}))</script></footer></div><div id=fixed-buttons><a href=#back-to-top id=back-to-top-button class=fixed-button title=回到顶部><i class="fas fa-arrow-up fa-fw"></i>
 </a><a href=# id=view-comments class=fixed-button title=查看评论><i class="fas fa-comment fa-fw"></i></a></div><div class=assets><script type=text/javascript>window.config={code:{copyTitle:"复制到剪贴板",maxShownLines:10},comment:{twikoo:{el:"#twikoo",envId:"https://doit-docs-comment-twikoo.vercel.app/",lang:"zh-cn"}},search:{algoliaAppID:"5YGRNRQK1G",algoliaIndex:"zh_cn_index",algoliaSearchKey:"0ff6874805de24b84aa1d5ebccad56cd",highlightTag:"em",maxResultLength:10,noResultsFound:"没有找到结果",snippetLength:50,type:"algolia"},sharerjs:!0}</script><script type=text/javascript src=/lib/twikoo/twikoo.all.min.js defer></script><script type=text/javascript src=/js/twikoo.min.js defer></script><script type=text/javascript src=/lib/clipboard/clipboard.min.js></script><script type=text/javascript src=/lib/sharer/sharer.min.js></script><script type=text/javascript src=/js/theme.min.js defer></script></div></body></html>
