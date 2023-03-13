@@ -154,7 +154,7 @@ mButton1.requestLayout();
 - onInterceptTouchEvent
 - onTouchEvent
 
-`dispatchTouchEvent`用来用来做事件的分发，返回结果受当前View的`onTouchEvent`和下级View的`dispatchTouchEvent`影像。返回值表示是否小号掉当前的事件。
+`dispatchTouchEvent`用来用来做事件的分发，返回结果受当前View的`onTouchEvent`和下级View的`dispatchTouchEvent`影响。返回值表示是否消耗掉当前的事件。
 
 `onInterceptTouchEvent`用来判断是否拦截某个事件，如果当前View拦截了某个事件，那么在同一个事件序列中，此方法不会被再次调用，返回结果表示是否拦截当前事件。
 
