@@ -4,6 +4,77 @@
 [课程连接](http://qiushao.net/categories/Android%E7%B3%BB%E7%BB%9F%E5%BC%80%E5%8F%91%E5%85%A5%E9%97%A8/)
 <!--more-->
 
+## 创建一个模块
+
+为了方便理解，我们先上手创建一个模块。
+
+### 添加源文件
+
+在我们之前定义的product目录下创建一个模块目录`hello`，并在其中创建`hello.cpp`：
+
+```c++
+#include <cstdio>
+#include <android/log.h>
+
+#define LOG_TAG "qiushao"
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG ,__VA_ARGS__)
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,LOG_TAG ,__VA_ARGS__)
+
+int main() {
+    printf("hello vee\n");
+    LOGD("hello vee");
+    return 0;
+}
+```
+
+### 添加必须的Android.bp文件
+
+在同级目录创建Android.bp：
+
+```
+cc_binary {              //模块类型为可执行文件
+    name: "hello",       //模块名hello
+    srcs: ["hello.cpp"], //源文件列表
+    vendor: true,        //编译出来放在/vendor目录下(默认是放在/system目录下)
+    shared_libs: [       //编译依赖的动态库
+        "liblog",
+    ],
+}
+```
+
+### 单编验证
+
+这个模块就定义完成了，现在可以单编这个模块：
+
+```
+mmm device/vee/veecar/hello/
+```
+
+编译完成后就可以在out/target/product/veecar/vendor/bin目录下看到hello可执行文件了。
+
+### 添加系统编译
+
+刚才我们只是单编，是通过`mmm`告诉系统要编译这个模块，但如果整编的话，系统是不知道我们新添加了一个模块的。所以需要向系统注册模块。
+
+在我们的/device/vee/veecar/veecar.mk中添加：
+
+```
+PRODUCT_PACKAGES += hello
+```
+
+然后整编系统就可以了。
+
+### 模拟器验证
+
+启动模拟器后：
+
+```
+adb shell hello
+
+输出：
+
+```
+
 ## 了解Android.bp
 
 AOSP的编译工具是soong，这货用Android.bp文件来定义编译方式。
@@ -201,3 +272,18 @@ var moduleTypes = map[string]string{
 |java_library_host||
 |java_library_host_dalvik||
 |android_app|构建apk|
+
+## 模块输出分区
+
+- system :主要包含 Android 框架， google 官方实现
+    - Android.mk 默认就是输出到 system 分区，不用指定
+    - Android.bp 默认就是输出到 system 分区，不用指定
+- vendor :SoC芯片商分区(系统级核心厂商，如高通), 为他们提供一些核心功能和服务，由 soc 实现
+    - Android.mk LOCAL_VENDOR_MODULE := true
+    - Android.bp vendor: true
+- odm :设备制造商分区（如华为、小米），为他们的传感器或外围设备提供一些核心功能和服务
+    - Android.mk LOCAL_ODM_MODULE := true
+    - Android.bp device_specific: true
+- product :产品机型分区
+    - Android.mk LOCAL_PRODUCT_MODULE := true
+    - Android.bp product_specific

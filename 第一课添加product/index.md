@@ -4,7 +4,19 @@
 [课程连接](http://qiushao.net/categories/Android%E7%B3%BB%E7%BB%9F%E5%BC%80%E5%8F%91%E5%85%A5%E9%97%A8/)
 <!--more-->
 
-### product的要素
+## 前言
+
+当我们编译AOSP时，需要先执行如下指令：
+
+```
+source build/envsetup.sh
+lunch aosp_x86_64-eng
+m -j24
+```
+
+其中`lunch`指令就是选择我们要编译的product。一般做产品时，我们会添加自己的product。
+
+## 创建product的四要素
 
 - vendorsetup.sh:把product添加到lunch选项
 - BoardConfig.mk : 芯片硬件相关配置，分区设置等
@@ -14,7 +26,7 @@
 - device:用来给厂商放product的。
 - build/target目录，用来放google官方内置的product的。
 
-### 创建device目录
+## 创建device目录
 
 device的目录结构：
 
