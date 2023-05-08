@@ -1,0 +1,1588 @@
+<!doctype html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=zh-CN lang=zh-cn><head><link href=https://gmpg.org/xfn/11 rel=profile><meta charset=utf-8><meta name=generator content="Hugo 0.110.0"><meta name=viewport content="width=device-width,initial-scale=1"><title>Android的Log系统原理 &#183; Vee's space</title><meta name=description content><link type=text/css rel=stylesheet href=https://vee-zhang.github.iocss/print.css media=print><link type=text/css rel=stylesheet href=https://vee-zhang.github.iocss/poole.css><link type=text/css rel=stylesheet href=https://vee-zhang.github.iocss/syntax.css><link type=text/css rel=stylesheet href=https://vee-zhang.github.iocss/hyde.css><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700"><link rel=apple-touch-icon-precomposed sizes=144x144 href=/apple-touch-icon-144-precomposed.png><link rel="shortcut icon" href=/favicon.png><link href=https://vee-zhang.github.io/android%E7%9A%84log%E7%B3%BB%E7%BB%9F%E5%8E%9F%E7%90%86/index.md rel=alternate type=text/plain title="Vee's space"></head><body><aside class=sidebar><div class="container sidebar-sticky"><div class=sidebar-about><a href=https://vee-zhang.github.io><h1>Vee's space</h1></a><p class=lead>关于 DoIt 主题</p></div><nav><ul class=sidebar-nav><li><a href=https://vee-zhang.github.io>Home</a></li><li><a href=/posts/>所有文章</a></li><li><a href=/tags/>标签</a></li><li><a href=/categories/>分类</a></li><li><a href=/series/>系列</a></li><li><a href=/about/>关于</a></li></ul></nav><p>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</p></div></aside><main class="content container"><div class=post><h1>Android的Log系统原理</h1><time datetime=2023-05-05T14:13:05+0800 class=post-date>Fri, May 5, 2023</time><h2 id=写在前面>写在前面</h2><p>参考：
+<a href=https://www.cnblogs.com/andy-songwei/p/9676823.html>https://www.cnblogs.com/andy-songwei/p/9676823.html</a>
+<a href=https://blog.csdn.net/shift_wwx/article/details/89138117>https://blog.csdn.net/shift_wwx/article/details/89138117</a></p><p><a href=https://blog.csdn.net/u010128475/article/details/125074826>https://blog.csdn.net/u010128475/article/details/125074826</a>
+<a href=https://blog.csdn.net/u010128475/article/details/125155785>https://blog.csdn.net/u010128475/article/details/125155785</a></p><p><a href=https://blog.51cto.com/u_15243273/5426776>https://blog.51cto.com/u_15243273/5426776</a></p><p><a href=https://blog.csdn.net/temp7695/article/details/126227952>https://blog.csdn.net/temp7695/article/details/126227952</a>
+<a href=https://juejin.cn/post/7137179033480986655>https://juejin.cn/post/7137179033480986655</a></p><p>规范：</p><ol><li>不允许使用VEROSE级别的log</li><li>INFO、WARN只允许打印少量重要信息；</li><li>只有出现极严重的错误的时候才可使用ERROR（比如导致系统的崩溃）</li><li>尽量使用DEBUG级别。</li><li>用户的隐私信息进制打印。</li><li>禁止再循环中打印log。</li><li>尽量不打印堆栈</li></ol><p>adb shell setprop log.tag.tagName level 不仅会改变Log.isLoggable(tag,level)的返回值，也会影响到Log.v() - Log.e() 是否打印</p><h2 id=正文>正文</h2><p>当我从<code>Log.d()</code>开始追踪，会进入<code>android.util.Log</code>的<code>print()</code>函数：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=cm>/** @hide */</span> <span class=nd>@SuppressWarnings</span><span class=o>(</span><span class=s>&#34;unused&#34;</span><span class=o>)</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=kt>int</span> <span class=nf>println</span><span class=o>(</span><span class=kt>int</span> <span class=n>bufID</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>        <span class=kt>int</span> <span class=n>priority</span><span class=o>,</span> <span class=n>String</span> <span class=n>tag</span><span class=o>,</span> <span class=n>String</span> <span class=n>msg</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=mi>0</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><blockquote><p>用@hide 注解标记的类或函数是google有意隐藏的，不能通过sdk查看</p></blockquote><p>擦，标记为<code>@hide</code>，不能查看，那就直接去android.jar中找println方法的实现：</p><ol><li>在AndroidSDK/platforms/android-30中解压缩android.jar;</li><li>在解压后的目录中找到android/util/Log.class直接拖进AS中反编译;</li><li>看到println方法为：</li></ol><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=kt>int</span> <span class=nf>println</span><span class=o>(</span><span class=kt>int</span> <span class=n>priority</span><span class=o>,</span> <span class=nd>@Nullable</span> <span class=n>String</span> <span class=n>tag</span><span class=o>,</span> <span class=nd>@NonNull</span> <span class=n>String</span> <span class=n>msg</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>throw</span> <span class=k>new</span> <span class=n>RuntimeException</span><span class=o>(</span><span class=s>&#34;Stub!&#34;</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><blockquote><p><code>throw new RuntimeException("Stub!");</code>表示实际运行时的这句逻辑会被ROM中相同的类代替执行。</p></blockquote><p>具体实现在AOSP的<code>frameworks/base/core/java/android/util/Log.java</code>:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm> * 长消息的帮助程序功能。使用 LineBreakBufferedWriter 沿换行符分解长消息和堆栈跟踪，但尝试以大块写入。这是为了避免截断。
+</span></span></span><span class=line><span class=cl><span class=cm> * @hide
+</span></span></span><span class=line><span class=cl><span class=cm> */</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=kt>int</span> <span class=nf>printlns</span><span class=o>(</span><span class=kt>int</span> <span class=n>bufID</span><span class=o>,</span> <span class=kt>int</span> <span class=n>priority</span><span class=o>,</span> <span class=n>String</span> <span class=n>tag</span><span class=o>,</span> <span class=n>String</span> <span class=n>msg</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>Throwable</span> <span class=n>tr</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>ImmediateLogWriter</span> <span class=n>logWriter</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ImmediateLogWriter</span><span class=o>(</span><span class=n>bufID</span><span class=o>,</span> <span class=n>priority</span><span class=o>,</span> <span class=n>tag</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// 确定缓冲区大小，tag越大则缓冲区越小
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=c1>// 这里的算法时获取到native的缓冲区-边界*2 - tag.lenth -32的余量。
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>int</span> <span class=n>bufferSize</span> <span class=o>=</span> <span class=n>PreloadHolder</span><span class=o>.</span><span class=na>LOGGER_ENTRY_MAX_PAYLOAD</span>    <span class=c1>// Base.
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=o>-</span> <span class=mi>2</span>                                                <span class=c1>// Two terminators.
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=o>-</span> <span class=o>(</span><span class=n>tag</span> <span class=o>!=</span> <span class=kc>null</span> <span class=o>?</span> <span class=n>tag</span><span class=o>.</span><span class=na>length</span><span class=o>()</span> <span class=o>:</span> <span class=mi>0</span><span class=o>)</span>                 <span class=c1>// Tag length.
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=o>-</span> <span class=mi>32</span><span class=o>;</span>                                              <span class=c1>// Some slack.
+</span></span></span><span class=line><span class=cl><span class=c1></span>    
+</span></span><span class=line><span class=cl>    <span class=c1>//缓冲区至少100
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>bufferSize</span> <span class=o>=</span> <span class=n>Math</span><span class=o>.</span><span class=na>max</span><span class=o>(</span><span class=n>bufferSize</span><span class=o>,</span> <span class=mi>100</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>LineBreakBufferedWriter</span> <span class=n>lbbw</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LineBreakBufferedWriter</span><span class=o>(</span><span class=n>logWriter</span><span class=o>,</span> <span class=n>bufferSize</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>lbbw</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>msg</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// 如果有异常，则循环打印堆栈信息
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=o>(</span><span class=n>tr</span> <span class=o>!=</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1>//为了减少app在一些非错误的情况下（比如没有网络）的日志吞吐量
+</span></span></span><span class=line><span class=cl><span class=c1></span>    
+</span></span><span class=line><span class=cl>        <span class=n>Throwable</span> <span class=n>t</span> <span class=o>=</span> <span class=n>tr</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>while</span> <span class=o>(</span><span class=n>t</span> <span class=o>!=</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=o>(</span><span class=n>t</span> <span class=k>instanceof</span> <span class=n>UnknownHostException</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>                <span class=k>break</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>            <span class=o>}</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=o>(</span><span class=n>t</span> <span class=k>instanceof</span> <span class=n>DeadSystemException</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>                <span class=n>lbbw</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=s>&#34;DeadSystemException: The system died; &#34;</span>
+</span></span><span class=line><span class=cl>                        <span class=o>+</span> <span class=s>&#34;earlier logs will point to the root cause&#34;</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>                <span class=k>break</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>            <span class=o>}</span>
+</span></span><span class=line><span class=cl>            <span class=n>t</span> <span class=o>=</span> <span class=n>t</span><span class=o>.</span><span class=na>getCause</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=o>(</span><span class=n>t</span> <span class=o>==</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>tr</span><span class=o>.</span><span class=na>printStackTrace</span><span class=o>(</span><span class=n>lbbw</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// 执行写入
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>lbbw</span><span class=o>.</span><span class=na>flush</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>logWriter</span><span class=o>.</span><span class=na>getWritten</span><span class=o>();</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>参数1：日志缓冲区：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=cm>/** @hide */</span> <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>int</span> <span class=n>LOG_ID_MAIN</span> <span class=o>=</span> <span class=mi>0</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=cm>/** @hide */</span> <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>int</span> <span class=n>LOG_ID_RADIO</span> <span class=o>=</span> <span class=mi>1</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=cm>/** @hide */</span> <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>int</span> <span class=n>LOG_ID_EVENTS</span> <span class=o>=</span> <span class=mi>2</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=cm>/** @hide */</span> <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>int</span> <span class=n>LOG_ID_SYSTEM</span> <span class=o>=</span> <span class=mi>3</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=cm>/** @hide */</span> <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>int</span> <span class=n>LOG_ID_CRASH</span> <span class=o>=</span> <span class=mi>4</span><span class=o>;</span>
+</span></span></code></pre></td></tr></table></div></div><p>参数2：日志级别：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>int</span> <span class=n>VERBOSE</span> <span class=o>=</span> <span class=mi>2</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>int</span> <span class=n>DEBUG</span> <span class=o>=</span> <span class=mi>3</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>int</span> <span class=n>INFO</span> <span class=o>=</span> <span class=mi>4</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>int</span> <span class=n>WARN</span> <span class=o>=</span> <span class=mi>5</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>int</span> <span class=n>ERROR</span> <span class=o>=</span> <span class=mi>6</span><span class=o>;</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>int</span> <span class=n>ASSERT</span> <span class=o>=</span> <span class=mi>7</span><span class=o>;</span>
+</span></span></code></pre></td></tr></table></div></div><p>主要就是依据日志的类型、级别，初始化<code>ImmediateLogWriter</code>，然后用<code>LineBreakBufferedWriter</code>装饰。</p><h2 id=获取缓冲区>获取缓冲区</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>static</span> <span class=kd>class</span> <span class=nc>PreloadHolder</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=kd>public</span> <span class=kd>final</span> <span class=kd>static</span> <span class=kt>int</span> <span class=n>LOGGER_ENTRY_MAX_PAYLOAD</span> <span class=o>=</span>
+</span></span><span class=line><span class=cl>                <span class=n>logger_entry_max_payload_native</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>调用的是<code>frameworks/base/core/jni/android_util_Log.cpp</code>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=k>static</span> <span class=n>jint</span> <span class=nf>android_util_Log_logger_entry_max_payload_native</span><span class=p>(</span><span class=n>JNIEnv</span><span class=o>*</span> <span class=n>env</span> <span class=n>ATTRIBUTE_UNUSED</span><span class=p>,</span> <span class=n>jobject</span> <span class=n>clazz</span> <span class=n>ATTRIBUTE_UNUSED</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=k>static_cast</span><span class=o>&lt;</span><span class=n>jint</span><span class=o>&gt;</span><span class=p>(</span><span class=n>LOGGER_ENTRY_MAX_PAYLOAD</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=cp>#define LOGGER_ENTRY_MAX_PAYLOAD 4068
+</span></span></span></code></pre></td></tr></table></div></div><p>可以看到我们系统默认的缓冲区大小是4068字节，那么<strong>一次性输出的log不能超过4068-2-tag.length-32</strong>。</p><h2 id=immediatelogwriter>ImmediateLogWriter</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm> * Helper class to write to the logcat. Different from LogWriter, this writes
+</span></span></span><span class=line><span class=cl><span class=cm> * the whole given buffer and does not break along newlines.
+</span></span></span><span class=line><span class=cl><span class=cm> */</span>
+</span></span><span class=line><span class=cl><span class=kd>private</span> <span class=kd>static</span> <span class=kd>class</span> <span class=nc>ImmediateLogWriter</span> <span class=kd>extends</span> <span class=n>Writer</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kt>int</span> <span class=n>bufID</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kt>int</span> <span class=n>priority</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=n>String</span> <span class=n>tag</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kt>int</span> <span class=n>written</span> <span class=o>=</span> <span class=mi>0</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=nf>ImmediateLogWriter</span><span class=o>(</span><span class=kt>int</span> <span class=n>bufID</span><span class=o>,</span> <span class=kt>int</span> <span class=n>priority</span><span class=o>,</span> <span class=n>String</span> <span class=n>tag</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>this</span><span class=o>.</span><span class=na>bufID</span> <span class=o>=</span> <span class=n>bufID</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>this</span><span class=o>.</span><span class=na>priority</span> <span class=o>=</span> <span class=n>priority</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>this</span><span class=o>.</span><span class=na>tag</span> <span class=o>=</span> <span class=n>tag</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=kt>int</span> <span class=nf>getWritten</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=n>written</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nd>@Override</span>
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>write</span><span class=o>(</span><span class=kt>char</span><span class=o>[]</span> <span class=n>cbuf</span><span class=o>,</span> <span class=kt>int</span> <span class=n>off</span><span class=o>,</span> <span class=kt>int</span> <span class=n>len</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        
+</span></span><span class=line><span class=cl>        <span class=c1>// 这里用用char[]去转C语言的char[]不是很方便，所以用了java中的String，会额外造成1bit的开销
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=n>written</span> <span class=o>+=</span> <span class=n>println_native</span><span class=o>(</span><span class=n>bufID</span><span class=o>,</span> <span class=n>priority</span><span class=o>,</span> <span class=n>tag</span><span class=o>,</span> <span class=k>new</span> <span class=n>String</span><span class=o>(</span><span class=n>cbuf</span><span class=o>,</span> <span class=n>off</span><span class=o>,</span> <span class=n>len</span><span class=o>));</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nd>@Override</span>
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>flush</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// Ignored.
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nd>@Override</span>
+</span></span><span class=line><span class=cl>    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>close</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// Ignored.
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=o>}</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=cm>/** @hide */</span> <span class=kd>public</span> <span class=kd>static</span> <span class=kd>native</span> <span class=kt>int</span> <span class=nf>println_native</span><span class=o>(</span><span class=kt>int</span> <span class=n>bufID</span><span class=o>,</span>
+</span></span><span class=line><span class=cl>            <span class=kt>int</span> <span class=n>priority</span><span class=o>,</span> <span class=n>String</span> <span class=n>tag</span><span class=o>,</span> <span class=n>String</span> <span class=n>msg</span><span class=o>);</span>
+</span></span></code></pre></td></tr></table></div></div><p>这里是自定义了一个Writer，重写<code>write()</code>函数时通过<code>println_native</code>本地函数去写日志。</p><h2 id=linebreakbufferedwriter>LineBreakBufferedWriter</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span><span class=lnt>69
+</span><span class=lnt>70
+</span><span class=lnt>71
+</span><span class=lnt>72
+</span><span class=lnt>73
+</span><span class=lnt>74
+</span><span class=lnt>75
+</span><span class=lnt>76
+</span><span class=lnt>77
+</span><span class=lnt>78
+</span><span class=lnt>79
+</span><span class=lnt>80
+</span><span class=lnt>81
+</span><span class=lnt>82
+</span><span class=lnt>83
+</span><span class=lnt>84
+</span><span class=lnt>85
+</span><span class=lnt>86
+</span><span class=lnt>87
+</span><span class=lnt>88
+</span><span class=lnt>89
+</span><span class=lnt>90
+</span><span class=lnt>91
+</span><span class=lnt>92
+</span><span class=lnt>93
+</span><span class=lnt>94
+</span><span class=lnt>95
+</span><span class=lnt>96
+</span><span class=lnt>97
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 构造方法1
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>public</span> <span class=nf>LineBreakBufferedWriter</span><span class=o>(</span><span class=n>Writer</span> <span class=n>out</span><span class=o>,</span> <span class=kt>int</span> <span class=n>bufferSize</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>this</span><span class=o>(</span><span class=n>out</span><span class=o>,</span> <span class=n>bufferSize</span><span class=o>,</span> <span class=mi>16</span><span class=o>);</span>  <span class=c1>// 16 is the default size of a StringBuilder buffer.
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 构造方法2
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>public</span> <span class=nf>LineBreakBufferedWriter</span><span class=o>(</span><span class=n>Writer</span> <span class=n>out</span><span class=o>,</span> <span class=kt>int</span> <span class=n>bufferSize</span><span class=o>,</span> <span class=kt>int</span> <span class=n>initialCapacity</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>super</span><span class=o>(</span><span class=n>out</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>this</span><span class=o>.</span><span class=na>buffer</span> <span class=o>=</span> <span class=k>new</span> <span class=kt>char</span><span class=o>[</span><span class=n>Math</span><span class=o>.</span><span class=na>min</span><span class=o>(</span><span class=n>initialCapacity</span><span class=o>,</span> <span class=n>bufferSize</span><span class=o>)];</span>
+</span></span><span class=line><span class=cl>    <span class=k>this</span><span class=o>.</span><span class=na>bufferIndex</span> <span class=o>=</span> <span class=mi>0</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>this</span><span class=o>.</span><span class=na>bufferSize</span> <span class=o>=</span> <span class=n>bufferSize</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>this</span><span class=o>.</span><span class=na>lineSeparator</span> <span class=o>=</span> <span class=n>System</span><span class=o>.</span><span class=na>getProperty</span><span class=o>(</span><span class=s>&#34;line.separator&#34;</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 专门用来写换行符
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=nd>@Override</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kt>void</span> <span class=nf>println</span><span class=o>()</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>write</span><span class=o>(</span><span class=n>lineSeparator</span><span class=o>);</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 自动折行算法
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=nd>@Override</span>
+</span></span><span class=line><span class=cl><span class=kd>public</span> <span class=kt>void</span> <span class=nf>write</span><span class=o>(</span><span class=kt>char</span><span class=o>[]</span> <span class=n>buf</span><span class=o>,</span> <span class=kt>int</span> <span class=n>off</span><span class=o>,</span> <span class=kt>int</span> <span class=n>len</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// bufferIndex为0
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>while</span> <span class=o>(</span><span class=n>bufferIndex</span> <span class=o>+</span> <span class=n>len</span> <span class=o>&gt;</span> <span class=n>bufferSize</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// Find the next newline in the buffer, see if that&#39;s below the limit.
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=c1>// Repeat.
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=kt>int</span> <span class=n>nextNewLine</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>        <span class=kt>int</span> <span class=n>maxLength</span> <span class=o>=</span> <span class=n>bufferSize</span> <span class=o>-</span> <span class=n>bufferIndex</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>maxLength</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=o>(</span><span class=n>buf</span><span class=o>[</span><span class=n>off</span> <span class=o>+</span> <span class=n>i</span><span class=o>]</span> <span class=o>==</span> <span class=sc>&#39;\n&#39;</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>                <span class=k>if</span> <span class=o>(</span><span class=n>bufferIndex</span> <span class=o>+</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>bufferSize</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>                    <span class=n>nextNewLine</span> <span class=o>=</span> <span class=n>i</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>                <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>                    <span class=k>break</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>                <span class=o>}</span>
+</span></span><span class=line><span class=cl>            <span class=o>}</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=o>(</span><span class=n>nextNewLine</span> <span class=o>!=</span> <span class=o>-</span><span class=mi>1</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// We can add some more data.
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=n>appendToBuffer</span><span class=o>(</span><span class=n>buf</span><span class=o>,</span> <span class=n>off</span><span class=o>,</span> <span class=n>nextNewLine</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>            <span class=n>writeBuffer</span><span class=o>(</span><span class=n>bufferIndex</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>            <span class=n>bufferIndex</span> <span class=o>=</span> <span class=mi>0</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>            <span class=n>lastNewline</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>            <span class=n>off</span> <span class=o>+=</span> <span class=n>nextNewLine</span> <span class=o>+</span> <span class=mi>1</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>            <span class=n>len</span> <span class=o>-=</span> <span class=n>nextNewLine</span> <span class=o>+</span> <span class=mi>1</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span> <span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=n>lastNewline</span> <span class=o>!=</span> <span class=o>-</span><span class=mi>1</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// Use the last newline.
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=n>writeBuffer</span><span class=o>(</span><span class=n>lastNewline</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>            <span class=n>removeFromBuffer</span><span class=o>(</span><span class=n>lastNewline</span> <span class=o>+</span> <span class=mi>1</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>            <span class=n>lastNewline</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// OK, there was no newline, break at a full buffer.
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=kt>int</span> <span class=n>rest</span> <span class=o>=</span> <span class=n>bufferSize</span> <span class=o>-</span> <span class=n>bufferIndex</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>            <span class=n>appendToBuffer</span><span class=o>(</span><span class=n>buf</span><span class=o>,</span> <span class=n>off</span><span class=o>,</span> <span class=n>rest</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>            <span class=n>writeBuffer</span><span class=o>(</span><span class=n>bufferIndex</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>            <span class=n>bufferIndex</span> <span class=o>=</span> <span class=mi>0</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>            <span class=n>off</span> <span class=o>+=</span> <span class=n>rest</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>            <span class=n>len</span> <span class=o>-=</span> <span class=n>rest</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// Add to the buffer, this will fit.
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=o>(</span><span class=n>len</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// Add the chars, find the last newline.
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=n>appendToBuffer</span><span class=o>(</span><span class=n>buf</span><span class=o>,</span> <span class=n>off</span><span class=o>,</span> <span class=n>len</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>len</span> <span class=o>-</span> <span class=mi>1</span><span class=o>;</span> <span class=n>i</span> <span class=o>&gt;=</span> <span class=mi>0</span><span class=o>;</span> <span class=n>i</span><span class=o>--)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=o>(</span><span class=n>buf</span><span class=o>[</span><span class=n>off</span> <span class=o>+</span> <span class=n>i</span><span class=o>]</span> <span class=o>==</span> <span class=sc>&#39;\n&#39;</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>                <span class=n>lastNewline</span> <span class=o>=</span> <span class=n>bufferIndex</span> <span class=o>-</span> <span class=n>len</span> <span class=o>+</span> <span class=n>i</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>                <span class=k>break</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>            <span class=o>}</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>private</span> <span class=kt>void</span> <span class=nf>writeBuffer</span><span class=o>(</span><span class=kt>int</span> <span class=n>length</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=o>(</span><span class=n>length</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=kd>super</span><span class=o>.</span><span class=na>write</span><span class=o>(</span><span class=n>buffer</span><span class=o>,</span> <span class=mi>0</span><span class=o>,</span> <span class=n>length</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// super
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>public</span> <span class=kt>void</span> <span class=nf>write</span><span class=o>(</span><span class=kt>char</span> <span class=n>buf</span><span class=o>[],</span> <span class=kt>int</span> <span class=n>off</span><span class=o>,</span> <span class=kt>int</span> <span class=n>len</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>try</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=kd>synchronized</span> <span class=o>(</span><span class=n>lock</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>ensureOpen</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>            <span class=n>out</span><span class=o>.</span><span class=na>write</span><span class=o>(</span><span class=n>buf</span><span class=o>,</span> <span class=n>off</span><span class=o>,</span> <span class=n>len</span><span class=o>);</span>
+</span></span><span class=line><span class=cl>        <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>catch</span> <span class=o>(</span><span class=n>InterruptedIOException</span> <span class=n>x</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>Thread</span><span class=o>.</span><span class=na>currentThread</span><span class=o>().</span><span class=na>interrupt</span><span class=o>();</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>catch</span> <span class=o>(</span><span class=n>IOException</span> <span class=n>x</span><span class=o>)</span> <span class=o>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>trouble</span> <span class=o>=</span> <span class=kc>true</span><span class=o>;</span>
+</span></span><span class=line><span class=cl>    <span class=o>}</span>
+</span></span><span class=line><span class=cl><span class=o>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>在write函数中会逐字检查是否有换行符，有则折行，涉及到大量字符串操作（查询、创建等）。那么<code>如果人为的减少使用换行符，可提高不少效率。</code></p><h2 id=jni>JNI</h2><p>当实际写入时，调用的是本地方法<code>android_util_Log_println_native</code>，代码位于<code>frameworks/base/core/jni/android_util_Log.cpp</code>:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=k>static</span> <span class=n>jint</span> <span class=nf>android_util_Log_println_native</span><span class=p>(</span><span class=n>JNIEnv</span><span class=o>*</span> <span class=n>env</span><span class=p>,</span> <span class=n>jobject</span> <span class=n>clazz</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>jint</span> <span class=n>bufID</span><span class=p>,</span> <span class=n>jint</span> <span class=n>priority</span><span class=p>,</span> <span class=n>jstring</span> <span class=n>tagObj</span><span class=p>,</span> <span class=n>jstring</span> <span class=n>msgObj</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>const</span> <span class=kt>char</span><span class=o>*</span> <span class=n>tag</span> <span class=o>=</span> <span class=nb>NULL</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>const</span> <span class=kt>char</span><span class=o>*</span> <span class=n>msg</span> <span class=o>=</span> <span class=nb>NULL</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=p>...</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>tagObj</span> <span class=o>!=</span> <span class=nb>NULL</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>tag</span> <span class=o>=</span> <span class=n>env</span><span class=o>-&gt;</span><span class=n>GetStringUTFChars</span><span class=p>(</span><span class=n>tagObj</span><span class=p>,</span> <span class=nb>NULL</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>msg</span> <span class=o>=</span> <span class=n>env</span><span class=o>-&gt;</span><span class=n>GetStringUTFChars</span><span class=p>(</span><span class=n>msgObj</span><span class=p>,</span> <span class=nb>NULL</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>res</span> <span class=o>=</span> <span class=n>__android_log_buf_write</span><span class=p>(</span><span class=n>bufID</span><span class=p>,</span> <span class=p>(</span><span class=n>android_LogPriority</span><span class=p>)</span><span class=n>priority</span><span class=p>,</span> <span class=n>tag</span><span class=p>,</span> <span class=n>msg</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>tag</span> <span class=o>!=</span> <span class=nb>NULL</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>env</span><span class=o>-&gt;</span><span class=n>ReleaseStringUTFChars</span><span class=p>(</span><span class=n>tagObj</span><span class=p>,</span> <span class=n>tag</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>env</span><span class=o>-&gt;</span><span class=n>ReleaseStringUTFChars</span><span class=p>(</span><span class=n>msgObj</span><span class=p>,</span> <span class=n>msg</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>res</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>核心调用是__android_log_buf_write(bufID, (android_LogPriority)priority, tag, msg);，位于<code>system/core/liblog/logger_write.c</code>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=n>LIBLOG_ABI_PUBLIC</span> <span class=kt>int</span> <span class=nf>__android_log_buf_write</span><span class=p>(</span><span class=kt>int</span> <span class=n>bufID</span><span class=p>,</span> <span class=kt>int</span> <span class=n>prio</span><span class=p>,</span> <span class=k>const</span> <span class=kt>char</span><span class=o>*</span> <span class=n>tag</span><span class=p>,</span> <span class=k>const</span> <span class=kt>char</span><span class=o>*</span> <span class=n>msg</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=k>struct</span> <span class=nc>iovec</span> <span class=n>vec</span><span class=p>[</span><span class=mi>3</span><span class=p>];</span>
+</span></span><span class=line><span class=cl>  <span class=kt>char</span> <span class=n>tmp_tag</span><span class=p>[</span><span class=mi>32</span><span class=p>];</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>tag</span><span class=p>)</span> <span class=n>tag</span> <span class=o>=</span> <span class=s>&#34;&#34;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=cm>/* XXX: This needs to go! */</span>
+</span></span><span class=line><span class=cl>  <span class=k>if</span> <span class=p>(</span><span class=n>bufID</span> <span class=o>!=</span> <span class=n>LOG_ID_RADIO</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>switch</span> <span class=p>(</span><span class=n>tag</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=k>case</span> <span class=sc>&#39;H&#39;</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>strcmp</span><span class=p>(</span><span class=n>tag</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=s>&#34;HTC_RIL&#34;</span> <span class=o>+</span> <span class=mi>1</span><span class=p>))</span> <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>goto</span> <span class=n>inform</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>case</span> <span class=sc>&#39;R&#39;</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>        <span class=cm>/* Any log tag with &#34;RIL&#34; as the prefix */</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>strncmp</span><span class=p>(</span><span class=n>tag</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=s>&#34;RIL&#34;</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=n>strlen</span><span class=p>(</span><span class=s>&#34;RIL&#34;</span><span class=p>)</span> <span class=o>-</span> <span class=mi>1</span><span class=p>))</span> <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>goto</span> <span class=n>inform</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>case</span> <span class=sc>&#39;Q&#39;</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>        <span class=cm>/* Any log tag with &#34;QC_RIL&#34; as the prefix */</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>strncmp</span><span class=p>(</span><span class=n>tag</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=s>&#34;QC_RIL&#34;</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=n>strlen</span><span class=p>(</span><span class=s>&#34;QC_RIL&#34;</span><span class=p>)</span> <span class=o>-</span> <span class=mi>1</span><span class=p>))</span> <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>goto</span> <span class=n>inform</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>case</span> <span class=sc>&#39;I&#39;</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>        <span class=cm>/* Any log tag with &#34;IMS&#34; as the prefix */</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>strncmp</span><span class=p>(</span><span class=n>tag</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=s>&#34;IMS&#34;</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=n>strlen</span><span class=p>(</span><span class=s>&#34;IMS&#34;</span><span class=p>)</span> <span class=o>-</span> <span class=mi>1</span><span class=p>))</span> <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>goto</span> <span class=n>inform</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>case</span> <span class=sc>&#39;A&#39;</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>strcmp</span><span class=p>(</span><span class=n>tag</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=s>&#34;AT&#34;</span> <span class=o>+</span> <span class=mi>1</span><span class=p>))</span> <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>goto</span> <span class=n>inform</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>case</span> <span class=sc>&#39;G&#39;</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>strcmp</span><span class=p>(</span><span class=n>tag</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=s>&#34;GSM&#34;</span> <span class=o>+</span> <span class=mi>1</span><span class=p>))</span> <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>goto</span> <span class=n>inform</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>case</span> <span class=sc>&#39;S&#39;</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>strcmp</span><span class=p>(</span><span class=n>tag</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=s>&#34;STK&#34;</span> <span class=o>+</span> <span class=mi>1</span><span class=p>)</span> <span class=o>&amp;&amp;</span> <span class=n>strcmp</span><span class=p>(</span><span class=n>tag</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=s>&#34;SMS&#34;</span> <span class=o>+</span> <span class=mi>1</span><span class=p>))</span> <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>goto</span> <span class=n>inform</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>case</span> <span class=sc>&#39;C&#39;</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>strcmp</span><span class=p>(</span><span class=n>tag</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=s>&#34;CDMA&#34;</span> <span class=o>+</span> <span class=mi>1</span><span class=p>))</span> <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>goto</span> <span class=n>inform</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>case</span> <span class=sc>&#39;P&#39;</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>strcmp</span><span class=p>(</span><span class=n>tag</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span> <span class=s>&#34;PHONE&#34;</span> <span class=o>+</span> <span class=mi>1</span><span class=p>))</span> <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=cm>/* FALLTHRU */</span>
+</span></span><span class=line><span class=cl>      <span class=nl>inform</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=n>bufID</span> <span class=o>=</span> <span class=n>LOG_ID_RADIO</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=n>snprintf</span><span class=p>(</span><span class=n>tmp_tag</span><span class=p>,</span> <span class=k>sizeof</span><span class=p>(</span><span class=n>tmp_tag</span><span class=p>),</span> <span class=s>&#34;use-Rlog/RLOG-%s&#34;</span><span class=p>,</span> <span class=n>tag</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=n>tag</span> <span class=o>=</span> <span class=n>tmp_tag</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=cm>/* FALLTHRU */</span>
+</span></span><span class=line><span class=cl>      <span class=k>default</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=cp>#if __BIONIC__
+</span></span></span><span class=line><span class=cl><span class=cp></span>  <span class=k>if</span> <span class=p>(</span><span class=n>prio</span> <span class=o>==</span> <span class=n>ANDROID_LOG_FATAL</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>android_set_abort_message</span><span class=p>(</span><span class=n>msg</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=cp>#endif
+</span></span></span><span class=line><span class=cl><span class=cp></span>
+</span></span><span class=line><span class=cl>  <span class=n>vec</span><span class=p>[</span><span class=mi>0</span><span class=p>].</span><span class=n>iov_base</span> <span class=o>=</span> <span class=p>(</span><span class=kt>unsigned</span> <span class=kt>char</span><span class=o>*</span><span class=p>)</span><span class=o>&amp;</span><span class=n>prio</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=n>vec</span><span class=p>[</span><span class=mi>0</span><span class=p>].</span><span class=n>iov_len</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=n>vec</span><span class=p>[</span><span class=mi>1</span><span class=p>].</span><span class=n>iov_base</span> <span class=o>=</span> <span class=p>(</span><span class=kt>void</span><span class=o>*</span><span class=p>)</span><span class=n>tag</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=n>vec</span><span class=p>[</span><span class=mi>1</span><span class=p>].</span><span class=n>iov_len</span> <span class=o>=</span> <span class=n>strlen</span><span class=p>(</span><span class=n>tag</span><span class=p>)</span> <span class=o>+</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=n>vec</span><span class=p>[</span><span class=mi>2</span><span class=p>].</span><span class=n>iov_base</span> <span class=o>=</span> <span class=p>(</span><span class=kt>void</span><span class=o>*</span><span class=p>)</span><span class=n>msg</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=n>vec</span><span class=p>[</span><span class=mi>2</span><span class=p>].</span><span class=n>iov_len</span> <span class=o>=</span> <span class=n>strlen</span><span class=p>(</span><span class=n>msg</span><span class=p>)</span> <span class=o>+</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=k>return</span> <span class=n>write_to_log</span><span class=p>(</span><span class=n>bufID</span><span class=p>,</span> <span class=n>vec</span><span class=p>,</span> <span class=mi>3</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>核心调用是<code>write_to_log</code>函数，实际第一次会调用<code>__write_to_log_init</code>函数：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=k>static</span> <span class=kt>int</span> <span class=nf>__write_to_log_init</span><span class=p>(</span><span class=n>log_id_t</span> <span class=n>log_id</span><span class=p>,</span> <span class=k>struct</span> <span class=nc>iovec</span><span class=o>*</span> <span class=n>vec</span><span class=p>,</span> <span class=n>size_t</span> <span class=n>nr</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=kt>int</span> <span class=n>ret</span><span class=p>,</span> <span class=n>save_errno</span> <span class=o>=</span> <span class=n>errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=c1>// 加锁
+</span></span></span><span class=line><span class=cl><span class=c1></span>  <span class=n>__android_log_lock</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=k>if</span> <span class=p>(</span><span class=n>write_to_log</span> <span class=o>==</span> <span class=n>__write_to_log_init</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// 初始化
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>ret</span> <span class=o>=</span> <span class=n>__write_to_log_initialize</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>__android_log_unlock</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>      <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>list_empty</span><span class=p>(</span><span class=o>&amp;</span><span class=n>__android_log_persist_write</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>__write_to_log_daemon</span><span class=p>(</span><span class=n>log_id</span><span class=p>,</span> <span class=n>vec</span><span class=p>,</span> <span class=n>nr</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl>      <span class=n>errno</span> <span class=o>=</span> <span class=n>save_errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>return</span> <span class=n>ret</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>write_to_log</span> <span class=o>=</span> <span class=n>__write_to_log_daemon</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=c1>// 解锁
+</span></span></span><span class=line><span class=cl><span class=c1></span>  <span class=n>__android_log_unlock</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=n>ret</span> <span class=o>=</span> <span class=n>write_to_log</span><span class=p>(</span><span class=n>log_id</span><span class=p>,</span> <span class=n>vec</span><span class=p>,</span> <span class=n>nr</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>  <span class=n>errno</span> <span class=o>=</span> <span class=n>save_errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=k>return</span> <span class=n>ret</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><blockquote><p>首先会执行初始化方法__write_to_log_initialize，作用是：为集合__android_log_transport_write设置各类writer，例如logdLoggerWrite，pmsgLoggerWrite等，然后依次调用writer的open方法，例如logdLoggerWrite#logdOpen方法，如果打开失败，则关闭。</p></blockquote><p>最后核心调用是位于<code>system/core/liblog/logger_write.c</code>的<code>__write_to_log_daemon</code>:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>  1
+</span><span class=lnt>  2
+</span><span class=lnt>  3
+</span><span class=lnt>  4
+</span><span class=lnt>  5
+</span><span class=lnt>  6
+</span><span class=lnt>  7
+</span><span class=lnt>  8
+</span><span class=lnt>  9
+</span><span class=lnt> 10
+</span><span class=lnt> 11
+</span><span class=lnt> 12
+</span><span class=lnt> 13
+</span><span class=lnt> 14
+</span><span class=lnt> 15
+</span><span class=lnt> 16
+</span><span class=lnt> 17
+</span><span class=lnt> 18
+</span><span class=lnt> 19
+</span><span class=lnt> 20
+</span><span class=lnt> 21
+</span><span class=lnt> 22
+</span><span class=lnt> 23
+</span><span class=lnt> 24
+</span><span class=lnt> 25
+</span><span class=lnt> 26
+</span><span class=lnt> 27
+</span><span class=lnt> 28
+</span><span class=lnt> 29
+</span><span class=lnt> 30
+</span><span class=lnt> 31
+</span><span class=lnt> 32
+</span><span class=lnt> 33
+</span><span class=lnt> 34
+</span><span class=lnt> 35
+</span><span class=lnt> 36
+</span><span class=lnt> 37
+</span><span class=lnt> 38
+</span><span class=lnt> 39
+</span><span class=lnt> 40
+</span><span class=lnt> 41
+</span><span class=lnt> 42
+</span><span class=lnt> 43
+</span><span class=lnt> 44
+</span><span class=lnt> 45
+</span><span class=lnt> 46
+</span><span class=lnt> 47
+</span><span class=lnt> 48
+</span><span class=lnt> 49
+</span><span class=lnt> 50
+</span><span class=lnt> 51
+</span><span class=lnt> 52
+</span><span class=lnt> 53
+</span><span class=lnt> 54
+</span><span class=lnt> 55
+</span><span class=lnt> 56
+</span><span class=lnt> 57
+</span><span class=lnt> 58
+</span><span class=lnt> 59
+</span><span class=lnt> 60
+</span><span class=lnt> 61
+</span><span class=lnt> 62
+</span><span class=lnt> 63
+</span><span class=lnt> 64
+</span><span class=lnt> 65
+</span><span class=lnt> 66
+</span><span class=lnt> 67
+</span><span class=lnt> 68
+</span><span class=lnt> 69
+</span><span class=lnt> 70
+</span><span class=lnt> 71
+</span><span class=lnt> 72
+</span><span class=lnt> 73
+</span><span class=lnt> 74
+</span><span class=lnt> 75
+</span><span class=lnt> 76
+</span><span class=lnt> 77
+</span><span class=lnt> 78
+</span><span class=lnt> 79
+</span><span class=lnt> 80
+</span><span class=lnt> 81
+</span><span class=lnt> 82
+</span><span class=lnt> 83
+</span><span class=lnt> 84
+</span><span class=lnt> 85
+</span><span class=lnt> 86
+</span><span class=lnt> 87
+</span><span class=lnt> 88
+</span><span class=lnt> 89
+</span><span class=lnt> 90
+</span><span class=lnt> 91
+</span><span class=lnt> 92
+</span><span class=lnt> 93
+</span><span class=lnt> 94
+</span><span class=lnt> 95
+</span><span class=lnt> 96
+</span><span class=lnt> 97
+</span><span class=lnt> 98
+</span><span class=lnt> 99
+</span><span class=lnt>100
+</span><span class=lnt>101
+</span><span class=lnt>102
+</span><span class=lnt>103
+</span><span class=lnt>104
+</span><span class=lnt>105
+</span><span class=lnt>106
+</span><span class=lnt>107
+</span><span class=lnt>108
+</span><span class=lnt>109
+</span><span class=lnt>110
+</span><span class=lnt>111
+</span><span class=lnt>112
+</span><span class=lnt>113
+</span><span class=lnt>114
+</span><span class=lnt>115
+</span><span class=lnt>116
+</span><span class=lnt>117
+</span><span class=lnt>118
+</span><span class=lnt>119
+</span><span class=lnt>120
+</span><span class=lnt>121
+</span><span class=lnt>122
+</span><span class=lnt>123
+</span><span class=lnt>124
+</span><span class=lnt>125
+</span><span class=lnt>126
+</span><span class=lnt>127
+</span><span class=lnt>128
+</span><span class=lnt>129
+</span><span class=lnt>130
+</span><span class=lnt>131
+</span><span class=lnt>132
+</span><span class=lnt>133
+</span><span class=lnt>134
+</span><span class=lnt>135
+</span><span class=lnt>136
+</span><span class=lnt>137
+</span><span class=lnt>138
+</span><span class=lnt>139
+</span><span class=lnt>140
+</span><span class=lnt>141
+</span><span class=lnt>142
+</span><span class=lnt>143
+</span><span class=lnt>144
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=k>static</span> <span class=kt>int</span> <span class=nf>__write_to_log_daemon</span><span class=p>(</span><span class=n>log_id_t</span> <span class=n>log_id</span><span class=p>,</span> <span class=k>struct</span> <span class=nc>iovec</span><span class=o>*</span> <span class=n>vec</span><span class=p>,</span> <span class=n>size_t</span> <span class=n>nr</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=k>struct</span> <span class=nc>android_log_transport_write</span><span class=o>*</span> <span class=n>node</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=kt>int</span> <span class=n>ret</span><span class=p>,</span> <span class=n>save_errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=k>struct</span> <span class=nc>timespec</span> <span class=n>ts</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=n>size_t</span> <span class=n>len</span><span class=p>,</span> <span class=n>i</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=k>for</span> <span class=p>(</span><span class=n>len</span> <span class=o>=</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>nr</span><span class=p>;</span> <span class=o>++</span><span class=n>i</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>len</span> <span class=o>+=</span> <span class=n>vec</span><span class=p>[</span><span class=n>i</span><span class=p>].</span><span class=n>iov_len</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>len</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=o>-</span><span class=n>EINVAL</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=n>save_errno</span> <span class=o>=</span> <span class=n>errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=cp>#if defined(__ANDROID__)
+</span></span></span><span class=line><span class=cl><span class=cp></span>
+</span></span><span class=line><span class=cl>  <span class=c1>// 获得日志时间
+</span></span></span><span class=line><span class=cl><span class=c1></span>  <span class=n>clock_gettime</span><span class=p>(</span><span class=n>android_log_clockid</span><span class=p>(),</span> <span class=o>&amp;</span><span class=n>ts</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=k>if</span> <span class=p>(</span><span class=n>log_id</span> <span class=o>==</span> <span class=n>LOG_ID_SECURITY</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>vec</span><span class=p>[</span><span class=mi>0</span><span class=p>].</span><span class=n>iov_len</span> <span class=o>&lt;</span> <span class=mi>4</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>errno</span> <span class=o>=</span> <span class=n>save_errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>return</span> <span class=o>-</span><span class=n>EINVAL</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>ret</span> <span class=o>=</span> <span class=n>check_log_uid_permissions</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>errno</span> <span class=o>=</span> <span class=n>save_errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>return</span> <span class=n>ret</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>__android_log_security</span><span class=p>())</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=cm>/* If only we could reset downstream logd counter */</span>
+</span></span><span class=line><span class=cl>      <span class=n>errno</span> <span class=o>=</span> <span class=n>save_errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>return</span> <span class=o>-</span><span class=n>EPERM</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span> <span class=k>else</span> <span class=k>if</span> <span class=p>(</span><span class=n>log_id</span> <span class=o>==</span> <span class=n>LOG_ID_EVENTS</span> <span class=o>||</span> <span class=n>log_id</span> <span class=o>==</span> <span class=n>LOG_ID_STATS</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>const</span> <span class=kt>char</span><span class=o>*</span> <span class=n>tag</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>size_t</span> <span class=n>len</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>EventTagMap</span> <span class=o>*</span><span class=n>m</span><span class=p>,</span> <span class=o>*</span><span class=n>f</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>vec</span><span class=p>[</span><span class=mi>0</span><span class=p>].</span><span class=n>iov_len</span> <span class=o>&lt;</span> <span class=mi>4</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>errno</span> <span class=o>=</span> <span class=n>save_errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>return</span> <span class=o>-</span><span class=n>EINVAL</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>tag</span> <span class=o>=</span> <span class=nb>NULL</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>len</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>f</span> <span class=o>=</span> <span class=nb>NULL</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>m</span> <span class=o>=</span> <span class=p>(</span><span class=n>EventTagMap</span><span class=o>*</span><span class=p>)</span><span class=n>atomic_load</span><span class=p>(</span><span class=o>&amp;</span><span class=n>tagMap</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>m</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>ret</span> <span class=o>=</span> <span class=n>__android_log_trylock</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>      <span class=n>m</span> <span class=o>=</span> <span class=p>(</span><span class=n>EventTagMap</span><span class=o>*</span><span class=p>)</span><span class=n>atomic_load</span><span class=p>(</span><span class=o>&amp;</span><span class=n>tagMap</span><span class=p>);</span> <span class=cm>/* trylock flush cache */</span>
+</span></span><span class=line><span class=cl>      <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>m</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>m</span> <span class=o>=</span> <span class=n>android_openEventTagMap</span><span class=p>(</span><span class=nb>NULL</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>ret</span><span class=p>)</span> <span class=p>{</span> <span class=cm>/* trylock failed, use local copy, mark for close */</span>
+</span></span><span class=line><span class=cl>          <span class=n>f</span> <span class=o>=</span> <span class=n>m</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>          <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>m</span><span class=p>)</span> <span class=p>{</span> <span class=cm>/* One chance to open map file */</span>
+</span></span><span class=line><span class=cl>            <span class=n>m</span> <span class=o>=</span> <span class=p>(</span><span class=n>EventTagMap</span><span class=o>*</span><span class=p>)(</span><span class=n>uintptr_t</span><span class=p>)</span><span class=o>-</span><span class=mi>1LL</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>          <span class=p>}</span>
+</span></span><span class=line><span class=cl>          <span class=n>atomic_store</span><span class=p>(</span><span class=o>&amp;</span><span class=n>tagMap</span><span class=p>,</span> <span class=p>(</span><span class=n>uintptr_t</span><span class=p>)</span><span class=n>m</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl>      <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>ret</span><span class=p>)</span> <span class=p>{</span> <span class=cm>/* trylock succeeded, unlock */</span>
+</span></span><span class=line><span class=cl>        <span class=n>__android_log_unlock</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>m</span> <span class=o>&amp;&amp;</span> <span class=p>(</span><span class=n>m</span> <span class=o>!=</span> <span class=p>(</span><span class=n>EventTagMap</span><span class=o>*</span><span class=p>)(</span><span class=n>uintptr_t</span><span class=p>)</span><span class=o>-</span><span class=mi>1LL</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>tag</span> <span class=o>=</span> <span class=n>android_lookupEventTag_len</span><span class=p>(</span><span class=n>m</span><span class=p>,</span> <span class=o>&amp;</span><span class=n>len</span><span class=p>,</span> <span class=n>get4LE</span><span class=p>(</span><span class=n>vec</span><span class=p>[</span><span class=mi>0</span><span class=p>].</span><span class=n>iov_base</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=n>ret</span> <span class=o>=</span> <span class=n>__android_log_is_loggable_len</span><span class=p>(</span><span class=n>ANDROID_LOG_INFO</span><span class=p>,</span> <span class=n>tag</span><span class=p>,</span> <span class=n>len</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                        <span class=n>ANDROID_LOG_VERBOSE</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>f</span><span class=p>)</span> <span class=p>{</span> <span class=cm>/* local copy marked for close */</span>
+</span></span><span class=line><span class=cl>      <span class=n>android_closeEventTagMap</span><span class=p>(</span><span class=n>f</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>ret</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>errno</span> <span class=o>=</span> <span class=n>save_errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>return</span> <span class=o>-</span><span class=n>EPERM</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=cm>/* Validate the incoming tag, tag content can not split across iovec */</span>
+</span></span><span class=line><span class=cl>    <span class=kt>char</span> <span class=n>prio</span> <span class=o>=</span> <span class=n>ANDROID_LOG_VERBOSE</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>const</span> <span class=kt>char</span><span class=o>*</span> <span class=n>tag</span> <span class=o>=</span> <span class=n>vec</span><span class=p>[</span><span class=mi>0</span><span class=p>].</span><span class=n>iov_base</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>size_t</span> <span class=n>len</span> <span class=o>=</span> <span class=n>vec</span><span class=p>[</span><span class=mi>0</span><span class=p>].</span><span class=n>iov_len</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>tag</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>len</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>len</span> <span class=o>&gt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>prio</span> <span class=o>=</span> <span class=o>*</span><span class=n>tag</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>if</span> <span class=p>(</span><span class=n>len</span> <span class=o>&gt;</span> <span class=mi>1</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=o>--</span><span class=n>len</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=o>++</span><span class=n>tag</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>len</span> <span class=o>=</span> <span class=n>vec</span><span class=p>[</span><span class=mi>1</span><span class=p>].</span><span class=n>iov_len</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=n>tag</span> <span class=o>=</span> <span class=p>((</span><span class=k>const</span> <span class=kt>char</span><span class=o>*</span><span class=p>)</span><span class=n>vec</span><span class=p>[</span><span class=mi>1</span><span class=p>].</span><span class=n>iov_base</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>tag</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>          <span class=n>len</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=cm>/* tag must be nul terminated */</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>tag</span> <span class=o>&amp;&amp;</span> <span class=n>strnlen</span><span class=p>(</span><span class=n>tag</span><span class=p>,</span> <span class=n>len</span><span class=p>)</span> <span class=o>&gt;=</span> <span class=n>len</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>tag</span> <span class=o>=</span> <span class=nb>NULL</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// 变量prio存储vec[0].iov_base，例如2（VERBOSE），tag存储vec[1].iov_base
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>__android_log_is_loggable_len</span><span class=p>(</span><span class=n>prio</span><span class=p>,</span> <span class=n>tag</span><span class=p>,</span> <span class=n>len</span> <span class=o>-</span> <span class=mi>1</span><span class=p>,</span> <span class=n>ANDROID_LOG_VERBOSE</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=c1>//如果当前打印的log级别低于系统设置的级别，会直接返回，不会打印。默认是：ANDROID_LOG_VERBOSE（2），系统设置的级别来自于属性：persist.log.tag 或 log.tag
+</span></span></span><span class=line><span class=cl><span class=c1></span>      <span class=n>errno</span> <span class=o>=</span> <span class=n>save_errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>return</span> <span class=o>-</span><span class=n>EPERM</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=cp>#else
+</span></span></span><span class=line><span class=cl><span class=cp></span>  <span class=cm>/* simulate clock_gettime(CLOCK_REALTIME, &amp;ts); */</span>
+</span></span><span class=line><span class=cl>  <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>struct</span> <span class=nc>timeval</span> <span class=n>tv</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>gettimeofday</span><span class=p>(</span><span class=o>&amp;</span><span class=n>tv</span><span class=p>,</span> <span class=nb>NULL</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>ts</span><span class=p>.</span><span class=n>tv_sec</span> <span class=o>=</span> <span class=n>tv</span><span class=p>.</span><span class=n>tv_sec</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>ts</span><span class=p>.</span><span class=n>tv_nsec</span> <span class=o>=</span> <span class=n>tv</span><span class=p>.</span><span class=n>tv_usec</span> <span class=o>*</span> <span class=mi>1000</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=cp>#endif
+</span></span></span><span class=line><span class=cl><span class=cp></span>
+</span></span><span class=line><span class=cl>  <span class=n>ret</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=n>i</span> <span class=o>=</span> <span class=mi>1</span> <span class=o>&lt;&lt;</span> <span class=n>log_id</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=n>write_transport_for_each</span><span class=p>(</span><span class=n>node</span><span class=p>,</span> <span class=o>&amp;</span><span class=n>__android_log_transport_write</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>node</span><span class=o>-&gt;</span><span class=n>logMask</span> <span class=o>&amp;</span> <span class=n>i</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>ssize_t</span> <span class=n>retval</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=n>retval</span> <span class=o>=</span> <span class=p>(</span><span class=o>*</span><span class=n>node</span><span class=o>-&gt;</span><span class=n>write</span><span class=p>)(</span><span class=n>log_id</span><span class=p>,</span> <span class=o>&amp;</span><span class=n>ts</span><span class=p>,</span> <span class=n>vec</span><span class=p>,</span> <span class=n>nr</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>      <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>&gt;=</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>ret</span> <span class=o>=</span> <span class=n>retval</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=n>write_transport_for_each</span><span class=p>(</span><span class=n>node</span><span class=p>,</span> <span class=o>&amp;</span><span class=n>__android_log_persist_write</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>node</span><span class=o>-&gt;</span><span class=n>logMask</span> <span class=o>&amp;</span> <span class=n>i</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=p>(</span><span class=kt>void</span><span class=p>)(</span><span class=o>*</span><span class=n>node</span><span class=o>-&gt;</span><span class=n>write</span><span class=p>)(</span><span class=n>log_id</span><span class=p>,</span> <span class=o>&amp;</span><span class=n>ts</span><span class=p>,</span> <span class=n>vec</span><span class=p>,</span> <span class=n>nr</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=n>errno</span> <span class=o>=</span> <span class=n>save_errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=k>return</span> <span class=n>ret</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>核心是最后的循环调用所有的<code>node->write</code>，这里的node其实就是writer（logdLoggerWrite）:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>  1
+</span><span class=lnt>  2
+</span><span class=lnt>  3
+</span><span class=lnt>  4
+</span><span class=lnt>  5
+</span><span class=lnt>  6
+</span><span class=lnt>  7
+</span><span class=lnt>  8
+</span><span class=lnt>  9
+</span><span class=lnt> 10
+</span><span class=lnt> 11
+</span><span class=lnt> 12
+</span><span class=lnt> 13
+</span><span class=lnt> 14
+</span><span class=lnt> 15
+</span><span class=lnt> 16
+</span><span class=lnt> 17
+</span><span class=lnt> 18
+</span><span class=lnt> 19
+</span><span class=lnt> 20
+</span><span class=lnt> 21
+</span><span class=lnt> 22
+</span><span class=lnt> 23
+</span><span class=lnt> 24
+</span><span class=lnt> 25
+</span><span class=lnt> 26
+</span><span class=lnt> 27
+</span><span class=lnt> 28
+</span><span class=lnt> 29
+</span><span class=lnt> 30
+</span><span class=lnt> 31
+</span><span class=lnt> 32
+</span><span class=lnt> 33
+</span><span class=lnt> 34
+</span><span class=lnt> 35
+</span><span class=lnt> 36
+</span><span class=lnt> 37
+</span><span class=lnt> 38
+</span><span class=lnt> 39
+</span><span class=lnt> 40
+</span><span class=lnt> 41
+</span><span class=lnt> 42
+</span><span class=lnt> 43
+</span><span class=lnt> 44
+</span><span class=lnt> 45
+</span><span class=lnt> 46
+</span><span class=lnt> 47
+</span><span class=lnt> 48
+</span><span class=lnt> 49
+</span><span class=lnt> 50
+</span><span class=lnt> 51
+</span><span class=lnt> 52
+</span><span class=lnt> 53
+</span><span class=lnt> 54
+</span><span class=lnt> 55
+</span><span class=lnt> 56
+</span><span class=lnt> 57
+</span><span class=lnt> 58
+</span><span class=lnt> 59
+</span><span class=lnt> 60
+</span><span class=lnt> 61
+</span><span class=lnt> 62
+</span><span class=lnt> 63
+</span><span class=lnt> 64
+</span><span class=lnt> 65
+</span><span class=lnt> 66
+</span><span class=lnt> 67
+</span><span class=lnt> 68
+</span><span class=lnt> 69
+</span><span class=lnt> 70
+</span><span class=lnt> 71
+</span><span class=lnt> 72
+</span><span class=lnt> 73
+</span><span class=lnt> 74
+</span><span class=lnt> 75
+</span><span class=lnt> 76
+</span><span class=lnt> 77
+</span><span class=lnt> 78
+</span><span class=lnt> 79
+</span><span class=lnt> 80
+</span><span class=lnt> 81
+</span><span class=lnt> 82
+</span><span class=lnt> 83
+</span><span class=lnt> 84
+</span><span class=lnt> 85
+</span><span class=lnt> 86
+</span><span class=lnt> 87
+</span><span class=lnt> 88
+</span><span class=lnt> 89
+</span><span class=lnt> 90
+</span><span class=lnt> 91
+</span><span class=lnt> 92
+</span><span class=lnt> 93
+</span><span class=lnt> 94
+</span><span class=lnt> 95
+</span><span class=lnt> 96
+</span><span class=lnt> 97
+</span><span class=lnt> 98
+</span><span class=lnt> 99
+</span><span class=lnt>100
+</span><span class=lnt>101
+</span><span class=lnt>102
+</span><span class=lnt>103
+</span><span class=lnt>104
+</span><span class=lnt>105
+</span><span class=lnt>106
+</span><span class=lnt>107
+</span><span class=lnt>108
+</span><span class=lnt>109
+</span><span class=lnt>110
+</span><span class=lnt>111
+</span><span class=lnt>112
+</span><span class=lnt>113
+</span><span class=lnt>114
+</span><span class=lnt>115
+</span><span class=lnt>116
+</span><span class=lnt>117
+</span><span class=lnt>118
+</span><span class=lnt>119
+</span><span class=lnt>120
+</span><span class=lnt>121
+</span><span class=lnt>122
+</span><span class=lnt>123
+</span><span class=lnt>124
+</span><span class=lnt>125
+</span><span class=lnt>126
+</span><span class=lnt>127
+</span><span class=lnt>128
+</span><span class=lnt>129
+</span><span class=lnt>130
+</span><span class=lnt>131
+</span><span class=lnt>132
+</span><span class=lnt>133
+</span><span class=lnt>134
+</span><span class=lnt>135
+</span><span class=lnt>136
+</span><span class=lnt>137
+</span><span class=lnt>138
+</span><span class=lnt>139
+</span><span class=lnt>140
+</span><span class=lnt>141
+</span><span class=lnt>142
+</span><span class=lnt>143
+</span><span class=lnt>144
+</span><span class=lnt>145
+</span><span class=lnt>146
+</span><span class=lnt>147
+</span><span class=lnt>148
+</span><span class=lnt>149
+</span><span class=lnt>150
+</span><span class=lnt>151
+</span><span class=lnt>152
+</span><span class=lnt>153
+</span><span class=lnt>154
+</span><span class=lnt>155
+</span><span class=lnt>156
+</span><span class=lnt>157
+</span><span class=lnt>158
+</span><span class=lnt>159
+</span><span class=lnt>160
+</span><span class=lnt>161
+</span><span class=lnt>162
+</span><span class=lnt>163
+</span><span class=lnt>164
+</span><span class=lnt>165
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=k>static</span> <span class=kt>int</span> <span class=nf>logdWrite</span><span class=p>(</span><span class=n>log_id_t</span> <span class=n>logId</span><span class=p>,</span> <span class=k>struct</span> <span class=nc>timespec</span><span class=o>*</span> <span class=n>ts</span><span class=p>,</span> <span class=k>struct</span> <span class=nc>iovec</span><span class=o>*</span> <span class=n>vec</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                     <span class=n>size_t</span> <span class=n>nr</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=n>ssize_t</span> <span class=n>ret</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=kt>int</span> <span class=n>sock</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=k>static</span> <span class=k>const</span> <span class=kt>unsigned</span> <span class=n>headerLength</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=k>struct</span> <span class=nc>iovec</span> <span class=n>newVec</span><span class=p>[</span><span class=n>nr</span> <span class=o>+</span> <span class=n>headerLength</span><span class=p>];</span>
+</span></span><span class=line><span class=cl>  <span class=n>android_log_header_t</span> <span class=n>header</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=n>size_t</span> <span class=n>i</span><span class=p>,</span> <span class=n>payloadSize</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=k>static</span> <span class=n>atomic_int_fast32_t</span> <span class=n>dropped</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=k>static</span> <span class=n>atomic_int_fast32_t</span> <span class=n>droppedSecurity</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=n>sock</span> <span class=o>=</span> <span class=n>atomic_load</span><span class=p>(</span><span class=o>&amp;</span><span class=n>logdLoggerWrite</span><span class=p>.</span><span class=n>context</span><span class=p>.</span><span class=n>sock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>  <span class=k>if</span> <span class=p>(</span><span class=n>sock</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=k>switch</span> <span class=p>(</span><span class=n>sock</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=k>case</span> <span class=o>-</span><span class=nl>ENOTCONN</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>      <span class=k>case</span> <span class=o>-</span><span class=nl>ECONNREFUSED</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>      <span class=k>case</span> <span class=o>-</span><span class=nl>ENOENT</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>default</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=o>-</span><span class=n>EBADF</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=cm>/* logd, after initialization and priv drop */</span>
+</span></span><span class=line><span class=cl>  <span class=k>if</span> <span class=p>(</span><span class=n>__android_log_uid</span><span class=p>()</span> <span class=o>==</span> <span class=n>AID_LOGD</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=cm>/*
+</span></span></span><span class=line><span class=cl><span class=cm>     * ignore log messages we send to ourself (logd).
+</span></span></span><span class=line><span class=cl><span class=cm>     * Such log messages are often generated by libraries we depend on
+</span></span></span><span class=line><span class=cl><span class=cm>     * which use standard Android logging.
+</span></span></span><span class=line><span class=cl><span class=cm>     */</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=cm>/*
+</span></span></span><span class=line><span class=cl><span class=cm>   *  struct {
+</span></span></span><span class=line><span class=cl><span class=cm>   *      // what we provide to socket
+</span></span></span><span class=line><span class=cl><span class=cm>   *      android_log_header_t header;
+</span></span></span><span class=line><span class=cl><span class=cm>   *      // caller provides
+</span></span></span><span class=line><span class=cl><span class=cm>   *      union {
+</span></span></span><span class=line><span class=cl><span class=cm>   *          struct {
+</span></span></span><span class=line><span class=cl><span class=cm>   *              char     prio;
+</span></span></span><span class=line><span class=cl><span class=cm>   *              char     payload[];
+</span></span></span><span class=line><span class=cl><span class=cm>   *          } string;
+</span></span></span><span class=line><span class=cl><span class=cm>   *          struct {
+</span></span></span><span class=line><span class=cl><span class=cm>   *              uint32_t tag
+</span></span></span><span class=line><span class=cl><span class=cm>   *              char     payload[];
+</span></span></span><span class=line><span class=cl><span class=cm>   *          } binary;
+</span></span></span><span class=line><span class=cl><span class=cm>   *      };
+</span></span></span><span class=line><span class=cl><span class=cm>   *  };
+</span></span></span><span class=line><span class=cl><span class=cm>   */</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=n>header</span><span class=p>.</span><span class=n>tid</span> <span class=o>=</span> <span class=n>gettid</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>  <span class=n>header</span><span class=p>.</span><span class=n>realtime</span><span class=p>.</span><span class=n>tv_sec</span> <span class=o>=</span> <span class=n>ts</span><span class=o>-&gt;</span><span class=n>tv_sec</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=n>header</span><span class=p>.</span><span class=n>realtime</span><span class=p>.</span><span class=n>tv_nsec</span> <span class=o>=</span> <span class=n>ts</span><span class=o>-&gt;</span><span class=n>tv_nsec</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=n>newVec</span><span class=p>[</span><span class=mi>0</span><span class=p>].</span><span class=n>iov_base</span> <span class=o>=</span> <span class=p>(</span><span class=kt>unsigned</span> <span class=kt>char</span><span class=o>*</span><span class=p>)</span><span class=o>&amp;</span><span class=n>header</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=n>newVec</span><span class=p>[</span><span class=mi>0</span><span class=p>].</span><span class=n>iov_len</span> <span class=o>=</span> <span class=k>sizeof</span><span class=p>(</span><span class=n>header</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=k>if</span> <span class=p>(</span><span class=n>sock</span> <span class=o>&gt;=</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int32_t</span> <span class=n>snapshot</span> <span class=o>=</span>
+</span></span><span class=line><span class=cl>        <span class=n>atomic_exchange_explicit</span><span class=p>(</span><span class=o>&amp;</span><span class=n>droppedSecurity</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=n>memory_order_relaxed</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>snapshot</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>android_log_event_int_t</span> <span class=n>buffer</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>      <span class=n>header</span><span class=p>.</span><span class=n>id</span> <span class=o>=</span> <span class=n>LOG_ID_SECURITY</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=n>buffer</span><span class=p>.</span><span class=n>header</span><span class=p>.</span><span class=n>tag</span> <span class=o>=</span> <span class=n>htole32</span><span class=p>(</span><span class=n>LIBLOG_LOG_TAG</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>      <span class=n>buffer</span><span class=p>.</span><span class=n>payload</span><span class=p>.</span><span class=n>type</span> <span class=o>=</span> <span class=n>EVENT_TYPE_INT</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=n>buffer</span><span class=p>.</span><span class=n>payload</span><span class=p>.</span><span class=n>data</span> <span class=o>=</span> <span class=n>htole32</span><span class=p>(</span><span class=n>snapshot</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>      <span class=n>newVec</span><span class=p>[</span><span class=n>headerLength</span><span class=p>].</span><span class=n>iov_base</span> <span class=o>=</span> <span class=o>&amp;</span><span class=n>buffer</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=n>newVec</span><span class=p>[</span><span class=n>headerLength</span><span class=p>].</span><span class=n>iov_len</span> <span class=o>=</span> <span class=k>sizeof</span><span class=p>(</span><span class=n>buffer</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>      <span class=n>ret</span> <span class=o>=</span> <span class=n>TEMP_FAILURE_RETRY</span><span class=p>(</span><span class=n>writev</span><span class=p>(</span><span class=n>sock</span><span class=p>,</span> <span class=n>newVec</span><span class=p>,</span> <span class=mi>2</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>      <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>!=</span> <span class=p>(</span><span class=n>ssize_t</span><span class=p>)(</span><span class=k>sizeof</span><span class=p>(</span><span class=n>header</span><span class=p>)</span> <span class=o>+</span> <span class=k>sizeof</span><span class=p>(</span><span class=n>buffer</span><span class=p>)))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>atomic_fetch_add_explicit</span><span class=p>(</span><span class=o>&amp;</span><span class=n>droppedSecurity</span><span class=p>,</span> <span class=n>snapshot</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                  <span class=n>memory_order_relaxed</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=n>snapshot</span> <span class=o>=</span> <span class=n>atomic_exchange_explicit</span><span class=p>(</span><span class=o>&amp;</span><span class=n>dropped</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=n>memory_order_relaxed</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>snapshot</span> <span class=o>&amp;&amp;</span>
+</span></span><span class=line><span class=cl>        <span class=n>__android_log_is_loggable_len</span><span class=p>(</span><span class=n>ANDROID_LOG_INFO</span><span class=p>,</span> <span class=s>&#34;liblog&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                      <span class=n>strlen</span><span class=p>(</span><span class=s>&#34;liblog&#34;</span><span class=p>),</span> <span class=n>ANDROID_LOG_VERBOSE</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>android_log_event_int_t</span> <span class=n>buffer</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>      <span class=n>header</span><span class=p>.</span><span class=n>id</span> <span class=o>=</span> <span class=n>LOG_ID_EVENTS</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=n>buffer</span><span class=p>.</span><span class=n>header</span><span class=p>.</span><span class=n>tag</span> <span class=o>=</span> <span class=n>htole32</span><span class=p>(</span><span class=n>LIBLOG_LOG_TAG</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>      <span class=n>buffer</span><span class=p>.</span><span class=n>payload</span><span class=p>.</span><span class=n>type</span> <span class=o>=</span> <span class=n>EVENT_TYPE_INT</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=n>buffer</span><span class=p>.</span><span class=n>payload</span><span class=p>.</span><span class=n>data</span> <span class=o>=</span> <span class=n>htole32</span><span class=p>(</span><span class=n>snapshot</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>      <span class=n>newVec</span><span class=p>[</span><span class=n>headerLength</span><span class=p>].</span><span class=n>iov_base</span> <span class=o>=</span> <span class=o>&amp;</span><span class=n>buffer</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=n>newVec</span><span class=p>[</span><span class=n>headerLength</span><span class=p>].</span><span class=n>iov_len</span> <span class=o>=</span> <span class=k>sizeof</span><span class=p>(</span><span class=n>buffer</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>      <span class=n>ret</span> <span class=o>=</span> <span class=n>TEMP_FAILURE_RETRY</span><span class=p>(</span><span class=n>writev</span><span class=p>(</span><span class=n>sock</span><span class=p>,</span> <span class=n>newVec</span><span class=p>,</span> <span class=mi>2</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>      <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>!=</span> <span class=p>(</span><span class=n>ssize_t</span><span class=p>)(</span><span class=k>sizeof</span><span class=p>(</span><span class=n>header</span><span class=p>)</span> <span class=o>+</span> <span class=k>sizeof</span><span class=p>(</span><span class=n>buffer</span><span class=p>)))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>atomic_fetch_add_explicit</span><span class=p>(</span><span class=o>&amp;</span><span class=n>dropped</span><span class=p>,</span> <span class=n>snapshot</span><span class=p>,</span> <span class=n>memory_order_relaxed</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=n>header</span><span class=p>.</span><span class=n>id</span> <span class=o>=</span> <span class=n>logId</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=k>for</span> <span class=p>(</span><span class=n>payloadSize</span> <span class=o>=</span> <span class=mi>0</span><span class=p>,</span> <span class=n>i</span> <span class=o>=</span> <span class=n>headerLength</span><span class=p>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>nr</span> <span class=o>+</span> <span class=n>headerLength</span><span class=p>;</span> <span class=n>i</span><span class=o>++</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>newVec</span><span class=p>[</span><span class=n>i</span><span class=p>].</span><span class=n>iov_base</span> <span class=o>=</span> <span class=n>vec</span><span class=p>[</span><span class=n>i</span> <span class=o>-</span> <span class=n>headerLength</span><span class=p>].</span><span class=n>iov_base</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>payloadSize</span> <span class=o>+=</span> <span class=n>newVec</span><span class=p>[</span><span class=n>i</span><span class=p>].</span><span class=n>iov_len</span> <span class=o>=</span> <span class=n>vec</span><span class=p>[</span><span class=n>i</span> <span class=o>-</span> <span class=n>headerLength</span><span class=p>].</span><span class=n>iov_len</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>payloadSize</span> <span class=o>&gt;</span> <span class=n>LOGGER_ENTRY_MAX_PAYLOAD</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>newVec</span><span class=p>[</span><span class=n>i</span><span class=p>].</span><span class=n>iov_len</span> <span class=o>-=</span> <span class=n>payloadSize</span> <span class=o>-</span> <span class=n>LOGGER_ENTRY_MAX_PAYLOAD</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=k>if</span> <span class=p>(</span><span class=n>newVec</span><span class=p>[</span><span class=n>i</span><span class=p>].</span><span class=n>iov_len</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=o>++</span><span class=n>i</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl>      <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=cm>/*
+</span></span></span><span class=line><span class=cl><span class=cm>   * The write below could be lost, but will never block.
+</span></span></span><span class=line><span class=cl><span class=cm>   *
+</span></span></span><span class=line><span class=cl><span class=cm>   * ENOTCONN occurs if logd has died.
+</span></span></span><span class=line><span class=cl><span class=cm>   * ENOENT occurs if logd is not running and socket is missing.
+</span></span></span><span class=line><span class=cl><span class=cm>   * ECONNREFUSED occurs if we can not reconnect to logd.
+</span></span></span><span class=line><span class=cl><span class=cm>   * EAGAIN occurs if logd is overloaded.
+</span></span></span><span class=line><span class=cl><span class=cm>   */</span>
+</span></span><span class=line><span class=cl>  <span class=k>if</span> <span class=p>(</span><span class=n>sock</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>ret</span> <span class=o>=</span> <span class=n>sock</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>ret</span> <span class=o>=</span> <span class=n>TEMP_FAILURE_RETRY</span><span class=p>(</span><span class=n>writev</span><span class=p>(</span><span class=n>sock</span><span class=p>,</span> <span class=n>newVec</span><span class=p>,</span> <span class=n>i</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>ret</span> <span class=o>=</span> <span class=o>-</span><span class=n>errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=k>switch</span> <span class=p>(</span><span class=n>ret</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>case</span> <span class=o>-</span><span class=nl>ENOTCONN</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=k>case</span> <span class=o>-</span><span class=nl>ECONNREFUSED</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=k>case</span> <span class=o>-</span><span class=nl>ENOENT</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>      <span class=k>if</span> <span class=p>(</span><span class=n>__android_log_trylock</span><span class=p>())</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=n>ret</span><span class=p>;</span> <span class=cm>/* in a signal handler? try again when less stressed */</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl>      <span class=n>__logdClose</span><span class=p>(</span><span class=n>ret</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>      <span class=n>ret</span> <span class=o>=</span> <span class=n>logdOpen</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>      <span class=n>__android_log_unlock</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>      <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=n>ret</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>      <span class=c1>// 通过socket写数据
+</span></span></span><span class=line><span class=cl><span class=c1></span>      <span class=n>ret</span> <span class=o>=</span> <span class=n>TEMP_FAILURE_RETRY</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>          <span class=n>writev</span><span class=p>(</span><span class=n>atomic_load</span><span class=p>(</span><span class=o>&amp;</span><span class=n>logdLoggerWrite</span><span class=p>.</span><span class=n>context</span><span class=p>.</span><span class=n>sock</span><span class=p>),</span> <span class=n>newVec</span><span class=p>,</span> <span class=n>i</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>      <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>ret</span> <span class=o>=</span> <span class=o>-</span><span class=n>errno</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=cm>/* FALLTHRU */</span>
+</span></span><span class=line><span class=cl>    <span class=k>default</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>      <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>&gt;</span> <span class=p>(</span><span class=n>ssize_t</span><span class=p>)</span><span class=k>sizeof</span><span class=p>(</span><span class=n>header</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>ret</span> <span class=o>-=</span> <span class=k>sizeof</span><span class=p>(</span><span class=n>header</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span> <span class=k>else</span> <span class=k>if</span> <span class=p>(</span><span class=n>ret</span> <span class=o>==</span> <span class=o>-</span><span class=n>EAGAIN</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>atomic_fetch_add_explicit</span><span class=p>(</span><span class=o>&amp;</span><span class=n>dropped</span><span class=p>,</span> <span class=mi>1</span><span class=p>,</span> <span class=n>memory_order_relaxed</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>logId</span> <span class=o>==</span> <span class=n>LOG_ID_SECURITY</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=n>atomic_fetch_add_explicit</span><span class=p>(</span><span class=o>&amp;</span><span class=n>droppedSecurity</span><span class=p>,</span> <span class=mi>1</span><span class=p>,</span> <span class=n>memory_order_relaxed</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  <span class=k>return</span> <span class=n>ret</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=logd守护进程>Logd守护进程</h2><blockquote><p>以下直接摘抄https://juejin.cn/post/7137179033480986655#heading-9</p></blockquote><p>位于<code>system/core/logd/</code>，首先看logd.rc：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl># 启动 /system/bin/logd
+</span></span><span class=line><span class=cl>service logd /system/bin/logd
+</span></span><span class=line><span class=cl>    // 创建三个socket
+</span></span><span class=line><span class=cl>    socket logd stream 0666 logd logd
+</span></span><span class=line><span class=cl>    socket logdr seqpacket 0666 logd logd
+</span></span><span class=line><span class=cl>    socket logdw dgram+passcred 0222 logd logd
+</span></span><span class=line><span class=cl>    file /proc/kmsg r
+</span></span><span class=line><span class=cl>    file /dev/kmsg w
+</span></span><span class=line><span class=cl>    user logd
+</span></span><span class=line><span class=cl>    group logd system package_info readproc
+</span></span><span class=line><span class=cl>    writepid /dev/cpuset/system-background/tasks
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>service logd-reinit /system/bin/logd --reinit
+</span></span><span class=line><span class=cl>    oneshot
+</span></span><span class=line><span class=cl>    disabled
+</span></span><span class=line><span class=cl>    user logd
+</span></span><span class=line><span class=cl>    group logd
+</span></span><span class=line><span class=cl>    writepid /dev/cpuset/system-background/tasks
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>on fs
+</span></span><span class=line><span class=cl>    write /dev/event-log-tags &#34;# content owned by logd
+</span></span><span class=line><span class=cl>&#34;
+</span></span><span class=line><span class=cl>    chown logd logd /dev/event-log-tags
+</span></span><span class=line><span class=cl>    chmod 0644 /dev/event-log-tags
+</span></span></code></pre></td></tr></table></div></div><ol><li>init进程启动一个<code>logd</code>守护进程（/system/bin/logd）；</li><li>同时创建3个socket通道用于IPC;</li></ol><p>可以通过<code>ss -pl</code>命令查看socket连接：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=line><span class=cl>&gt; ps -A <span class=p>|</span> grep logd
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>logd           <span class=m>335</span>     <span class=m>1</span>   <span class=m>35732</span>  <span class=m>15604</span> sigsuspend          <span class=m>0</span> S logd
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>&gt;ss -pl <span class=p>|</span> grep <span class=m>335</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>nl     UNCONN     <span class=m>0</span>      <span class=m>0</span>      audit:logd/335               *                     
+</span></span><span class=line><span class=cl>u_str  LISTEN     <span class=m>0</span>      <span class=m>0</span>      /dev/socket/logd <span class=m>17505</span>                 * <span class=m>0</span>                     users:<span class=o>((</span><span class=s2>&#34;logd&#34;</span>,pid<span class=o>=</span>335,fd<span class=o>=</span>11<span class=o>))</span>
+</span></span><span class=line><span class=cl>u_dgr  UNCONN     <span class=m>0</span>      <span class=m>0</span>       * <span class=m>2037</span>                  * <span class=m>0</span>                     users:<span class=o>((</span><span class=s2>&#34;logd&#34;</span>,pid<span class=o>=</span>335,fd<span class=o>=</span>29<span class=o>))</span>
+</span></span><span class=line><span class=cl>u_dgr  UNCONN     <span class=m>0</span>      <span class=m>0</span>      /dev/socket/logdw <span class=m>17513</span>                 * <span class=m>0</span>                     users:<span class=o>((</span><span class=s2>&#34;logd&#34;</span>,pid<span class=o>=</span>335,fd<span class=o>=</span>13<span class=o>))</span>
+</span></span><span class=line><span class=cl>u_seq  LISTEN     <span class=m>0</span>      <span class=m>0</span>      /dev/socket/logdr <span class=m>17510</span>                 * <span class=m>0</span>                     users:<span class=o>((</span><span class=s2>&#34;logd&#34;</span>,pid<span class=o>=</span>335,fd<span class=o>=</span>12<span class=o>))</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=main>main()</h3><p>位于<code>system/core/logd/main.cpp</code>:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=kt>int</span> <span class=nf>main</span><span class=p>(</span><span class=kt>int</span> <span class=n>argc</span><span class=p>,</span> <span class=kt>char</span><span class=o>*</span> <span class=n>argv</span><span class=p>[])</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// ...
+</span></span></span><span class=line><span class=cl><span class=c1></span>     
+</span></span><span class=line><span class=cl>    <span class=c1>// LogBuffer，作用：存储所有的日志信息
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>logBuf</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LogBuffer</span><span class=p>(</span><span class=n>times</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>     
+</span></span><span class=line><span class=cl>    <span class=c1>// LogReader监听Socket（/dev/socket/logdr），作用：当客户端连接logd后，LogReader将LogBuffer中的日志写给客户端。线程名：logd.reader，通过prctl(PR_SET_NAME, &#34;logd.reader&#34;);设定
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>LogReader</span><span class=o>*</span> <span class=n>reader</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LogReader</span><span class=p>(</span><span class=n>logBuf</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>reader</span><span class=o>-&gt;</span><span class=n>startListener</span><span class=p>())</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>exit</span><span class=p>(</span><span class=mi>1</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl> 
+</span></span><span class=line><span class=cl>    <span class=c1>// LogListener监听Socket（/dev/socket/logdw），作用：接收传来的日志信息，写入LogBuffer；同时LogReader将新的日志传给已连接的客户端。线程名：logd.writer
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>LogListener</span><span class=o>*</span> <span class=n>swl</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LogListener</span><span class=p>(</span><span class=n>logBuf</span><span class=p>,</span> <span class=n>reader</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>swl</span><span class=o>-&gt;</span><span class=n>startListener</span><span class=p>(</span><span class=mi>600</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>exit</span><span class=p>(</span><span class=mi>1</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl> 
+</span></span><span class=line><span class=cl>    <span class=c1>//CommandListener监听Socket（/dev/socket/logd），作用：接收发来的命令。线程名：logd.control
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>CommandListener</span><span class=o>*</span> <span class=n>cl</span> <span class=o>=</span> <span class=k>new</span> <span class=n>CommandListener</span><span class=p>(</span><span class=n>logBuf</span><span class=p>,</span> <span class=n>reader</span><span class=p>,</span> <span class=n>swl</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>cl</span><span class=o>-&gt;</span><span class=n>startListener</span><span class=p>())</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>exit</span><span class=p>(</span><span class=mi>1</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// ...
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>exit</span><span class=p>(</span><span class=mi>0</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><ul><li>LogReader: 监听/dev/socket/logdr, 当client连接上则将buffer信息写入client. 所对应线程名”logd.reader”</li><li>LogListener: 监听/dev/socket/logdw, 新日志添加到LogBuffer, 并且LogReader发送更新给已连接的client. 所对应线程名”logd.writer”</li><li>CommandListener: 监听/dev/socket/logd, 处理logd管理命令. 所对应线程名”logd.control”</li><li>LogAudit: 所对应线程名”logd.auditd”</li><li>LogKlog: 所对应线程名”logd.klogd”
+入口reinit_thread_start: 所对应线程名”logd.daemon”</li></ul><p>另外，ANDROID_SOCKET_NAMESPACE_RESERVED代表位于/dev/socket名字空间。 通过adb命令，可以看到logd进程有几个子线程：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell><span class=line><span class=cl>&gt;ps -T -p <span class=m>335</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>USER           PID   TID  PPID     VSZ    RSS WCHAN            ADDR S CMD            
+</span></span><span class=line><span class=cl>logd           <span class=m>335</span>   <span class=m>335</span>     <span class=m>1</span>   <span class=m>43924</span>  <span class=m>23872</span> sigsuspend          <span class=m>0</span> S logd
+</span></span><span class=line><span class=cl>logd           <span class=m>335</span>   <span class=m>348</span>     <span class=m>1</span>   <span class=m>43924</span>  <span class=m>23872</span> futex_wai+          <span class=m>0</span> S logd.daemon
+</span></span><span class=line><span class=cl>logd           <span class=m>335</span>   <span class=m>349</span>     <span class=m>1</span>   <span class=m>43924</span>  <span class=m>23872</span> poll_sche+          <span class=m>0</span> S logd.reader
+</span></span><span class=line><span class=cl>logd           <span class=m>335</span>   <span class=m>350</span>     <span class=m>1</span>   <span class=m>43924</span>  <span class=m>23872</span> poll_sche+          <span class=m>0</span> S logd.writer
+</span></span><span class=line><span class=cl>logd           <span class=m>335</span>   <span class=m>351</span>     <span class=m>1</span>   <span class=m>43924</span>  <span class=m>23872</span> poll_sche+          <span class=m>0</span> S logd.control
+</span></span><span class=line><span class=cl>logd           <span class=m>335</span>   <span class=m>354</span>     <span class=m>1</span>   <span class=m>43924</span>  <span class=m>23872</span> do_syslog           <span class=m>0</span> S logd.klogd
+</span></span><span class=line><span class=cl>logd           <span class=m>335</span>   <span class=m>355</span>     <span class=m>1</span>   <span class=m>43924</span>  <span class=m>23872</span> poll_sche+          <span class=m>0</span> S logd.auditd
+</span></span><span class=line><span class=cl>logd           <span class=m>335</span>   <span class=m>624</span>     <span class=m>1</span>   <span class=m>43924</span>  <span class=m>23872</span> futex_wai+          <span class=m>0</span> S logd.reader.per
+</span></span><span class=line><span class=cl>logd           <span class=m>335</span>   <span class=m>666</span>     <span class=m>1</span>   <span class=m>43924</span>  <span class=m>23872</span> futex_wai+          <span class=m>0</span> S logd.reader.per
+</span></span></code></pre></td></tr></table></div></div><h3 id=loglistener>LogListener</h3><p>位于<code>system/core/logd/LogListener.cpp</code>:</p><p>当有对端进程通过Socket传递过来数据后，onDataAvailable方法被调用，其中主要是解析数据、调用LogBuffer->log方法存储日志信息，调用LogReader→notifyNewLog方法通知有新的日志信息，以便发送给其客户端。如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=kt>bool</span> <span class=n>LogListener</span><span class=o>::</span><span class=n>onDataAvailable</span><span class=p>(</span><span class=n>SocketClient</span><span class=o>*</span> <span class=n>cli</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// ...
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=c1>// 1. 调用LogBuffer-&gt;log方法存储日志信息
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>int</span> <span class=n>res</span> <span class=o>=</span> <span class=n>logbuf</span><span class=o>-&gt;</span><span class=n>log</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>            <span class=n>logId</span><span class=p>,</span> <span class=n>header</span><span class=o>-&gt;</span><span class=n>realtime</span><span class=p>,</span> <span class=n>cred</span><span class=o>-&gt;</span><span class=n>uid</span><span class=p>,</span> <span class=n>cred</span><span class=o>-&gt;</span><span class=n>pid</span><span class=p>,</span> <span class=n>header</span><span class=o>-&gt;</span><span class=n>tid</span><span class=p>,</span> <span class=n>msg</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>            <span class=p>((</span><span class=n>size_t</span><span class=p>)</span><span class=n>n</span> <span class=o>&lt;=</span> <span class=n>USHRT_MAX</span><span class=p>)</span> <span class=o>?</span> <span class=p>(</span><span class=kt>unsigned</span> <span class=kt>short</span><span class=p>)</span><span class=nl>n</span> <span class=p>:</span> <span class=n>USHRT_MAX</span><span class=p>);</span>
+</span></span><span class=line><span class=cl> 
+</span></span><span class=line><span class=cl>    <span class=c1>// 2. 调用LogReader→notifyNewLog方法通知有新的日志信息，以便发送给其客户端
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=n>res</span> <span class=o>&gt;</span> <span class=mi>0</span> <span class=o>&amp;&amp;</span> <span class=n>reader</span> <span class=o>!=</span> <span class=k>nullptr</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>reader</span><span class=o>-&gt;</span><span class=n>notifyNewLog</span><span class=p>(</span><span class=k>static_cast</span><span class=o>&lt;</span><span class=n>log_mask_t</span><span class=o>&gt;</span><span class=p>(</span><span class=mi>1</span> <span class=o>&lt;&lt;</span> <span class=n>logId</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// ...
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=err>作者：兔子的先森</span>
+</span></span><span class=line><span class=cl><span class=err>链接：</span><span class=nl>https</span><span class=p>:</span><span class=c1>//juejin.cn/post/7137179033480986655
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=err>来源：稀土掘金</span>
+</span></span><span class=line><span class=cl><span class=err>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=logbuffer>LogBuffer</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=kt>int</span> <span class=n>LogBuffer</span><span class=o>::</span><span class=n>log</span><span class=p>(</span><span class=n>log_id_t</span> <span class=n>log_id</span><span class=p>,</span> <span class=n>log_time</span> <span class=n>realtime</span><span class=p>,</span> <span class=n>uid_t</span> <span class=n>uid</span><span class=p>,</span> <span class=n>pid_t</span> <span class=n>pid</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                   <span class=n>pid_t</span> <span class=n>tid</span><span class=p>,</span> <span class=k>const</span> <span class=kt>char</span><span class=o>*</span> <span class=n>msg</span><span class=p>,</span> <span class=kt>unsigned</span> <span class=kt>short</span> <span class=n>len</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// ...
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=c1>// 低于当前设定的日志优先级，返回
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>__android_log_is_loggable_len</span><span class=p>(</span><span class=n>prio</span><span class=p>,</span> <span class=n>tag</span><span class=p>,</span> <span class=n>tag_len</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                       <span class=n>ANDROID_LOG_VERBOSE</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// Log traffic received to total
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=n>wrlock</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>        <span class=n>stats</span><span class=p>.</span><span class=n>addTotal</span><span class=p>(</span><span class=n>elem</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=n>unlock</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>        <span class=k>delete</span> <span class=n>elem</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=o>-</span><span class=n>EACCES</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl> 
+</span></span><span class=line><span class=cl>    <span class=c1>// 调用重载的log方法
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>log</span><span class=p>(</span><span class=n>elem</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>unlock</span><span class=p>();</span>
+</span></span><span class=line><span class=cl> 
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>len</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>  继续看log方法，主要作用是通过比对新进日志信息的时间，将其插入到正确的存储位置。所有日志存储在mLogElements变量中，其类型是：typedef std::list&lt;LogBufferElement*></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=kt>void</span> <span class=n>LogBuffer</span><span class=o>::</span><span class=n>log</span><span class=p>(</span><span class=n>LogBufferElement</span><span class=o>*</span> <span class=n>elem</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>      <span class=c1>// 插入正确位置，逻辑相对复杂，摘取其中关键一段
+</span></span></span><span class=line><span class=cl><span class=c1></span>      <span class=k>do</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>last</span> <span class=o>=</span> <span class=n>it</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=p>(</span><span class=n>__predict_false</span><span class=p>(</span><span class=n>it</span> <span class=o>==</span> <span class=n>mLogElements</span><span class=p>.</span><span class=n>begin</span><span class=p>()))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                  <span class=k>break</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>            <span class=o>--</span><span class=n>it</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span> <span class=k>while</span> <span class=p>(((</span><span class=o>*</span><span class=n>it</span><span class=p>)</span><span class=o>-&gt;</span><span class=n>getRealTime</span><span class=p>()</span> <span class=o>&gt;</span> <span class=n>elem</span><span class=o>-&gt;</span><span class=n>getRealTime</span><span class=p>())</span> <span class=o>&amp;&amp;</span> <span class=p>(</span><span class=o>!</span><span class=n>end_set</span> <span class=o>||</span> <span class=p>(</span><span class=n>end</span> <span class=o>&lt;=</span> <span class=p>(</span><span class=o>*</span><span class=n>it</span><span class=p>)</span><span class=o>-&gt;</span><span class=n>getRealTime</span><span class=p>())));</span>
+</span></span><span class=line><span class=cl>            <span class=n>mLogElements</span><span class=p>.</span><span class=n>insert</span><span class=p>(</span><span class=n>last</span><span class=p>,</span> <span class=n>elem</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>      <span class=p>}</span>
+</span></span><span class=line><span class=cl> 
+</span></span><span class=line><span class=cl>     <span class=c1>// ...
+</span></span></span><span class=line><span class=cl><span class=c1></span>     <span class=n>stats</span><span class=p>.</span><span class=n>add</span><span class=p>(</span><span class=n>elem</span><span class=p>);</span>           <span class=c1>// 初步看做一些统计工作，例如通过数组，统计不同类型日志的打印次数，不同类型日志的字符串总长度等，并且将日志信息以uid, pid, tid, tag等为单位，保存elem信息至不同的hashtable中
+</span></span></span><span class=line><span class=cl><span class=c1></span>     <span class=n>maybePrune</span><span class=p>(</span><span class=n>elem</span><span class=o>-&gt;</span><span class=n>getLogId</span><span class=p>());</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>其中maybePrune方法的作用很重要，当不同类型的log日志size超过最大限制时，会触发对已保存日志信息的裁剪，一次裁剪量约为10%：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=kt>void</span> <span class=n>LogBuffer</span><span class=o>::</span><span class=n>maybePrune</span><span class=p>(</span><span class=n>log_id_t</span> <span class=n>id</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>size_t</span> <span class=n>sizes</span> <span class=o>=</span> <span class=n>stats</span><span class=p>.</span><span class=n>sizes</span><span class=p>(</span><span class=n>id</span><span class=p>);</span>                                         <span class=c1>// 来自LogStatistics-&gt;mSizes[id]变量的值，统计不同日志类型的当前日志长度（msg）
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>unsigned</span> <span class=kt>long</span> <span class=n>maxSize</span> <span class=o>=</span> <span class=n>log_buffer_size</span><span class=p>(</span><span class=n>id</span><span class=p>);</span>            <span class=c1>// 取不同日志类型的日志长度最大值
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=n>sizes</span> <span class=o>&gt;</span> <span class=n>maxSize</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>size_t</span> <span class=n>sizeOver</span> <span class=o>=</span> <span class=n>sizes</span> <span class=o>-</span> <span class=p>((</span><span class=n>maxSize</span> <span class=o>*</span> <span class=mi>9</span><span class=p>)</span> <span class=o>/</span> <span class=mi>10</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=n>size_t</span> <span class=n>elements</span> <span class=o>=</span> <span class=n>stats</span><span class=p>.</span><span class=n>realElements</span><span class=p>(</span><span class=n>id</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=n>size_t</span> <span class=n>minElements</span> <span class=o>=</span> <span class=n>elements</span> <span class=o>/</span> <span class=mi>100</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>minElements</span> <span class=o>&lt;</span> <span class=n>minPrune</span><span class=p>)</span> <span class=p>{</span>                               <span class=c1>// minPrune值是4
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=n>minElements</span> <span class=o>=</span> <span class=n>minPrune</span><span class=p>;</span>                                 <span class=c1>// minElements默认是全部日志元素数的百分之一，最小值是4
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=kt>unsigned</span> <span class=kt>long</span> <span class=n>pruneRows</span> <span class=o>=</span> <span class=n>elements</span> <span class=o>*</span> <span class=n>sizeOver</span> <span class=o>/</span> <span class=n>sizes</span><span class=p>;</span>  <span class=c1>// 需要裁剪的元素个数，最小值是4个，最大值是256个，正常是总元素的比例：1 - （maxSize/sizes）* 0.9 = 约等于10%
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=k>if</span> <span class=p>(</span><span class=n>pruneRows</span> <span class=o>&lt;</span> <span class=n>minElements</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>pruneRows</span> <span class=o>=</span> <span class=n>minElements</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>pruneRows</span> <span class=o>&gt;</span> <span class=n>maxPrune</span><span class=p>)</span> <span class=p>{</span>                               <span class=c1>// maxPrune值是256
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=n>pruneRows</span> <span class=o>=</span> <span class=n>maxPrune</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=n>prune</span><span class=p>(</span><span class=n>id</span><span class=p>,</span> <span class=n>pruneRows</span><span class=p>);</span>                                           <span class=c1>// 如果日志存储已越界，则最终走到prune裁剪函数中处理，pruneRows是需要裁剪的元素个数
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><blockquote><p>重要备注：不同日志类型的日志长度最大值，由上到下取值顺序：
+persist.logd.size.* // 例如：persist.logd.size.main、persist.logd.size.radio、persist.logd.size.events、persist.logd.size.system、persist.logd.size.crash、persist.logd.size.stats、persist.logd.size.security、persist.logd.size.kernel
+ro.logd.size.* // 例如：ro.logd.size.main、ro.logd.size.radio、ro.logd.size.events、ro.logd.size.system、ro.logd.size.crash、ro.logd.size.stats、ro.logd.size.security、ro.logd.size.kernel
+persist.logd.size // 设置APP：开发者选项-日志记录器缓冲区大小，默认256K
+ro.logd.size
+LOG_BUFFER_MIN_SIZE // 64K，条件是如果ro.config.low_ram是true，表示低内存手机
+LOG_BUFFER_SIZE // 256K</p></blockquote><p>另外可以用adb logcat -g命令查看缓冲区大小
+具体执行的prune裁剪方法这里没有深究，感兴趣的同学可以看下system/core/logd/LogBuffer.cpp#prune方法，大致思路是：</p><p>支持黑/白名单（详见LogWhiteBlackList.cpp，uid + pid。注意：adb logcat -P可设置），白名单中不裁剪
+优先裁剪黑名单、打印日志最多的uid，system uid中打印日志最多的pid</p><p>至此一次完整的：APP调用Log.v方法打印VERBOSE日志，调用执行过程完毕！</p></div></main></body></html>

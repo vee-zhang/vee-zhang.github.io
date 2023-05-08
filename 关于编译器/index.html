@@ -1,0 +1,129 @@
+<!doctype html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=zh-CN lang=zh-cn><head><link href=https://gmpg.org/xfn/11 rel=profile><meta charset=utf-8><meta name=generator content="Hugo 0.110.0"><meta name=viewport content="width=device-width,initial-scale=1"><title>关于编译器 &#183; Vee's space</title><meta name=description content><link type=text/css rel=stylesheet href=https://vee-zhang.github.iocss/print.css media=print><link type=text/css rel=stylesheet href=https://vee-zhang.github.iocss/poole.css><link type=text/css rel=stylesheet href=https://vee-zhang.github.iocss/syntax.css><link type=text/css rel=stylesheet href=https://vee-zhang.github.iocss/hyde.css><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700"><link rel=apple-touch-icon-precomposed sizes=144x144 href=/apple-touch-icon-144-precomposed.png><link rel="shortcut icon" href=/favicon.png><link href=https://vee-zhang.github.io/%E5%85%B3%E4%BA%8E%E7%BC%96%E8%AF%91%E5%99%A8/index.md rel=alternate type=text/plain title="Vee's space"></head><body><aside class=sidebar><div class="container sidebar-sticky"><div class=sidebar-about><a href=https://vee-zhang.github.io><h1>Vee's space</h1></a><p class=lead>关于 DoIt 主题</p></div><nav><ul class=sidebar-nav><li><a href=https://vee-zhang.github.io>Home</a></li><li><a href=/posts/>所有文章</a></li><li><a href=/tags/>标签</a></li><li><a href=/categories/>分类</a></li><li><a href=/series/>系列</a></li><li><a href=/about/>关于</a></li></ul></nav><p>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</p></div></aside><main class="content container"><div class=post><h1>关于编译器</h1><time datetime=2023-04-08T09:21:09+0800 class=post-date>Sat, Apr 8, 2023</time><h2 id=gcc与g的区别>gcc与g++的区别</h2><p>g++是gcc的升级版，底层实际上还是调用gcc来进行编译的。</p><ul><li>gcc 支持编译c和c++，但是不能自动连接c++的库；</li><li>g++ 支持编译c和c++，但是会把.c当作c++编译，虽然也能编译过，但是一般c++语言检查较严。</li><li>clang</li><li>clang++</li></ul><h2 id=常用编译taskjson和lauchjson>常用编译task.json和lauch.json</h2><p>先来看vscode通过c++插件默认生成的task:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>{
+</span></span><span class=line><span class=cl>    &#34;tasks&#34;: [
+</span></span><span class=line><span class=cl>        {
+</span></span><span class=line><span class=cl>            &#34;type&#34;: &#34;cppbuild&#34;,
+</span></span><span class=line><span class=cl>            &#34;label&#34;: &#34;C/C++: g++ 生成活动文件&#34;,
+</span></span><span class=line><span class=cl>            &#34;command&#34;: &#34;/usr/bin/g++&#34;,
+</span></span><span class=line><span class=cl>            &#34;args&#34;: [
+</span></span><span class=line><span class=cl>                &#34;-fdiagnostics-color=always&#34;,//彩色错误提示
+</span></span><span class=line><span class=cl>                &#34;-g&#34;,
+</span></span><span class=line><span class=cl>                &#34;${file}&#34;,
+</span></span><span class=line><span class=cl>                &#34;-o&#34;,
+</span></span><span class=line><span class=cl>                &#34;${fileDirname}/${fileBasenameNoExtension}&#34;,
+</span></span><span class=line><span class=cl>                &#34;-lhv&#34;,
+</span></span><span class=line><span class=cl>                &#34;-lssl&#34;
+</span></span><span class=line><span class=cl>            ],
+</span></span><span class=line><span class=cl>            &#34;options&#34;: {
+</span></span><span class=line><span class=cl>                &#34;cwd&#34;: &#34;${fileDirname}&#34;
+</span></span><span class=line><span class=cl>            },
+</span></span><span class=line><span class=cl>            &#34;problemMatcher&#34;: [
+</span></span><span class=line><span class=cl>                &#34;$gcc&#34;
+</span></span><span class=line><span class=cl>            ],
+</span></span><span class=line><span class=cl>            &#34;group&#34;: {
+</span></span><span class=line><span class=cl>                &#34;kind&#34;: &#34;build&#34;,
+</span></span><span class=line><span class=cl>                &#34;isDefault&#34;: true
+</span></span><span class=line><span class=cl>            },
+</span></span><span class=line><span class=cl>            &#34;detail&#34;: &#34;调试器生成的任务。&#34;
+</span></span><span class=line><span class=cl>        }
+</span></span><span class=line><span class=cl>    ],
+</span></span><span class=line><span class=cl>    &#34;version&#34;: &#34;2.0.0&#34;
+</span></span><span class=line><span class=cl>}
+</span></span></code></pre></td></tr></table></div></div><p>lauch.json:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>{
+</span></span><span class=line><span class=cl>    // 使用 IntelliSense 了解相关属性。 
+</span></span><span class=line><span class=cl>    // 悬停以查看现有属性的描述。
+</span></span><span class=line><span class=cl>    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+</span></span><span class=line><span class=cl>    &#34;version&#34;: &#34;0.2.0&#34;,
+</span></span><span class=line><span class=cl>    &#34;configurations&#34;: [
+</span></span><span class=line><span class=cl>        {
+</span></span><span class=line><span class=cl>            &#34;name&#34;: &#34;(gdb) 启动&#34;,
+</span></span><span class=line><span class=cl>            &#34;type&#34;: &#34;cppdbg&#34;,
+</span></span><span class=line><span class=cl>            &#34;request&#34;: &#34;launch&#34;,
+</span></span><span class=line><span class=cl>            &#34;program&#34;: &#34;${workspaceFolder}/main&#34;,
+</span></span><span class=line><span class=cl>            &#34;args&#34;: [],
+</span></span><span class=line><span class=cl>            &#34;stopAtEntry&#34;: false,
+</span></span><span class=line><span class=cl>            &#34;cwd&#34;: &#34;${fileDirname}&#34;,
+</span></span><span class=line><span class=cl>            &#34;environment&#34;: [],
+</span></span><span class=line><span class=cl>            &#34;externalConsole&#34;: false,
+</span></span><span class=line><span class=cl>            &#34;MIMode&#34;: &#34;gdb&#34;,
+</span></span><span class=line><span class=cl>            &#34;preLaunchTask&#34;: &#34;C/C++: g++ 生成活动文件&#34;,
+</span></span><span class=line><span class=cl>            &#34;setupCommands&#34;: [
+</span></span><span class=line><span class=cl>                {
+</span></span><span class=line><span class=cl>                    &#34;description&#34;: &#34;为 gdb 启用整齐打印&#34;,
+</span></span><span class=line><span class=cl>                    &#34;text&#34;: &#34;-enable-pretty-printing&#34;,
+</span></span><span class=line><span class=cl>                    &#34;ignoreFailures&#34;: true
+</span></span><span class=line><span class=cl>                },
+</span></span><span class=line><span class=cl>                {
+</span></span><span class=line><span class=cl>                    &#34;description&#34;: &#34;将反汇编风格设置为 Intel&#34;,
+</span></span><span class=line><span class=cl>                    &#34;text&#34;: &#34;-gdb-set disassembly-flavor intel&#34;,
+</span></span><span class=line><span class=cl>                    &#34;ignoreFailures&#34;: true
+</span></span><span class=line><span class=cl>                }
+</span></span><span class=line><span class=cl>            ]
+</span></span><span class=line><span class=cl>        }
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    ]
+</span></span><span class=line><span class=cl>}
+</span></span></code></pre></td></tr></table></div></div><h2 id=gcc常用参数>gcc常用参数</h2><table><thead><tr><th>参数</th><th>作用</th></tr></thead><tbody><tr><td>-g</td><td>指明要编译的目标文件</td></tr><tr><td>-o</td><td>指定产物的path和名称，默认c和c++编译出的玩意都叫a.out</td></tr><tr><td>-l</td><td>链库，需要先安装，比如我这里的hv库和ssl库</td></tr></tbody></table></div></main></body></html>
