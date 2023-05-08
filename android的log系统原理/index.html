@@ -2,7 +2,10 @@
 <a href=https://www.cnblogs.com/andy-songwei/p/9676823.html>https://www.cnblogs.com/andy-songwei/p/9676823.html</a>
 <a href=https://blog.csdn.net/shift_wwx/article/details/89138117>https://blog.csdn.net/shift_wwx/article/details/89138117</a></p><p><a href=https://blog.csdn.net/u010128475/article/details/125074826>https://blog.csdn.net/u010128475/article/details/125074826</a>
 <a href=https://blog.csdn.net/u010128475/article/details/125155785>https://blog.csdn.net/u010128475/article/details/125155785</a></p><p><a href=https://blog.51cto.com/u_15243273/5426776>https://blog.51cto.com/u_15243273/5426776</a></p><p><a href=https://blog.csdn.net/temp7695/article/details/126227952>https://blog.csdn.net/temp7695/article/details/126227952</a>
-<a href=https://juejin.cn/post/7137179033480986655>https://juejin.cn/post/7137179033480986655</a></p><p>规范：</p><ol><li>不允许使用VEROSE级别的log</li><li>INFO、WARN只允许打印少量重要信息；</li><li>只有出现极严重的错误的时候才可使用ERROR（比如导致系统的崩溃）</li><li>尽量使用DEBUG级别。</li><li>用户的隐私信息进制打印。</li><li>禁止再循环中打印log。</li><li>尽量不打印堆栈</li></ol><p>adb shell setprop log.tag.tagName level 不仅会改变Log.isLoggable(tag,level)的返回值，也会影响到Log.v() - Log.e() 是否打印</p><h2 id=正文>正文</h2><p>当我从<code>Log.d()</code>开始追踪，会进入<code>android.util.Log</code>的<code>print()</code>函数：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+<a href=https://juejin.cn/post/7137179033480986655>https://juejin.cn/post/7137179033480986655</a></p><h2 id=规范>规范：</h2><ol><li>不允许使用VEROSE级别的log</li><li>INFO、WARN只允许打印少量重要信息；</li><li>只有出现极严重的错误的时候才可使用ERROR（比如导致系统的崩溃）</li><li>尽量使用DEBUG级别。</li><li>用户的隐私信息进制打印。</li><li>禁止再循环中打印log。</li><li>尽量不打印堆栈</li><li>尽量不要在生产环境打印debg级别</li><li>打印exception信息一般使用Warn级别，而Error级别用于打印更为危险的信息，比如系统的崩溃等。</li><li>使用门面模式对应用模块与日志工具解耦。</li></ol><p>adb shell setprop log.tag.tagName level 不仅会改变Log.isLoggable(tag,level)的返回值，也会影响到Log.v() - Log.e() 是否打印</p><h2 id=正文>正文</h2><p><img src=logd.png alt>
+<img src=log%E9%80%9A%E4%BF%A1%E8%BF%87%E7%A8%8B.png alt></p><p>可以使用<code>Log.isLoggable(tagName,level)</code>来判断是否允许打印log，然后可以在user版本中，通过下面的指令来控制日志的输出：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>adb shell setprop log.tag.tagName level
+</span></span></code></pre></td></tr></table></div></div><p>当我从<code>Log.d()</code>开始追踪，会进入<code>android.util.Log</code>的<code>print()</code>函数：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
 </span><span class=lnt>3
 </span><span class=lnt>4
@@ -480,7 +483,7 @@
 </span></span><span class=line><span class=cl>
 </span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>res</span><span class=p>;</span>
 </span></span><span class=line><span class=cl><span class=p>}</span>
-</span></span></code></pre></td></tr></table></div></div><p>核心调用是__android_log_buf_write(bufID, (android_LogPriority)priority, tag, msg);，位于<code>system/core/liblog/logger_write.c</code>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span></span></code></pre></td></tr></table></div></div><p>核心调用是__android_log_buf_write(bufID, (android_LogPriority)priority, tag, msg);，位于<code>system/core/liblog/logger_write.c</code>：</p><h2 id=liblog>liblog</h2><p>位于<code>system/core/liblog</code></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
 </span><span class=lnt> 4
@@ -1319,7 +1322,7 @@
 </span></span><span class=line><span class=cl>    writepid /dev/cpuset/system-background/tasks
 </span></span><span class=line><span class=cl>
 </span></span><span class=line><span class=cl>service logd-reinit /system/bin/logd --reinit
-</span></span><span class=line><span class=cl>    oneshot
+</span></span><span class=line><span class=cl>    oneshot// 表示只调用一次
 </span></span><span class=line><span class=cl>    disabled
 </span></span><span class=line><span class=cl>    user logd
 </span></span><span class=line><span class=cl>    group logd
@@ -1378,9 +1381,109 @@
 </span><span class=lnt>24
 </span><span class=lnt>25
 </span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span><span class=lnt>69
+</span><span class=lnt>70
+</span><span class=lnt>71
+</span><span class=lnt>72
+</span><span class=lnt>73
+</span><span class=lnt>74
+</span><span class=lnt>75
+</span><span class=lnt>76
+</span><span class=lnt>77
+</span><span class=lnt>78
+</span><span class=lnt>79
+</span><span class=lnt>80
+</span><span class=lnt>81
+</span><span class=lnt>82
+</span><span class=lnt>83
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=kt>int</span> <span class=nf>main</span><span class=p>(</span><span class=kt>int</span> <span class=n>argc</span><span class=p>,</span> <span class=kt>char</span><span class=o>*</span> <span class=n>argv</span><span class=p>[])</span> <span class=p>{</span>
 </span></span><span class=line><span class=cl>    <span class=c1>// ...
-</span></span></span><span class=line><span class=cl><span class=c1></span>     
+</span></span></span><span class=line><span class=cl><span class=c1></span>
+</span></span><span class=line><span class=cl>    <span class=k>static</span> <span class=k>const</span> <span class=kt>char</span> <span class=n>dev_kmsg</span><span class=p>[]</span> <span class=o>=</span> <span class=s>&#34;/dev/kmsg&#34;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>fdDmesg</span> <span class=o>=</span> <span class=n>android_get_control_file</span><span class=p>(</span><span class=n>dev_kmsg</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>fdDmesg</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>fdDmesg</span> <span class=o>=</span> <span class=n>TEMP_FAILURE_RETRY</span><span class=p>(</span><span class=n>open</span><span class=p>(</span><span class=n>dev_kmsg</span><span class=p>,</span> <span class=n>O_WRONLY</span> <span class=o>|</span> <span class=n>O_CLOEXEC</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>fdPmesg</span> <span class=o>=</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=kt>bool</span> <span class=n>klogd</span> <span class=o>=</span> <span class=n>__android_logger_property_get_bool</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>        <span class=s>&#34;ro.logd.kernel&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>BOOL_DEFAULT_TRUE</span> <span class=o>|</span> <span class=n>BOOL_DEFAULT_FLAG_ENG</span> <span class=o>|</span> <span class=n>BOOL_DEFAULT_FLAG_SVELTE</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>klogd</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>static</span> <span class=k>const</span> <span class=kt>char</span> <span class=n>proc_kmsg</span><span class=p>[]</span> <span class=o>=</span> <span class=s>&#34;/proc/kmsg&#34;</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=n>fdPmesg</span> <span class=o>=</span> <span class=n>android_get_control_file</span><span class=p>(</span><span class=n>proc_kmsg</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>fdPmesg</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>fdPmesg</span> <span class=o>=</span> <span class=n>TEMP_FAILURE_RETRY</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                <span class=n>open</span><span class=p>(</span><span class=n>proc_kmsg</span><span class=p>,</span> <span class=n>O_RDONLY</span> <span class=o>|</span> <span class=n>O_NDELAY</span> <span class=o>|</span> <span class=n>O_CLOEXEC</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>fdPmesg</span> <span class=o>&lt;</span> <span class=mi>0</span><span class=p>)</span> <span class=n>android</span><span class=o>::</span><span class=n>prdebug</span><span class=p>(</span><span class=s>&#34;Failed to open %s</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=n>proc_kmsg</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// 启动 Reinit Thread
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>sem_init</span><span class=p>(</span><span class=o>&amp;</span><span class=n>reinit</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=mi>0</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>sem_init</span><span class=p>(</span><span class=o>&amp;</span><span class=n>uidName</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=mi>0</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>sem_init</span><span class=p>(</span><span class=o>&amp;</span><span class=n>sem_name</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=mi>1</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>pthread_attr_t</span> <span class=n>attr</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>pthread_attr_init</span><span class=p>(</span><span class=o>&amp;</span><span class=n>attr</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>struct</span> <span class=nc>sched_param</span> <span class=n>param</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=n>memset</span><span class=p>(</span><span class=o>&amp;</span><span class=n>param</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=k>sizeof</span><span class=p>(</span><span class=n>param</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>        <span class=n>pthread_attr_setschedparam</span><span class=p>(</span><span class=o>&amp;</span><span class=n>attr</span><span class=p>,</span> <span class=o>&amp;</span><span class=n>param</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=n>pthread_attr_setschedpolicy</span><span class=p>(</span><span class=o>&amp;</span><span class=n>attr</span><span class=p>,</span> <span class=n>SCHED_BATCH</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>pthread_attr_setdetachstate</span><span class=p>(</span><span class=o>&amp;</span><span class=n>attr</span><span class=p>,</span> <span class=n>PTHREAD_CREATE_DETACHED</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>pthread_t</span> <span class=kr>thread</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=n>reinit_running</span> <span class=o>=</span> <span class=nb>true</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// 等待reinit信号
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=k>if</span> <span class=p>(</span><span class=n>pthread_create</span><span class=p>(</span><span class=o>&amp;</span><span class=kr>thread</span><span class=p>,</span> <span class=o>&amp;</span><span class=n>attr</span><span class=p>,</span> <span class=n>reinit_thread_start</span><span class=p>,</span> <span class=k>nullptr</span><span class=p>))</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=n>reinit_running</span> <span class=o>=</span> <span class=nb>false</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=n>pthread_attr_destroy</span><span class=p>(</span><span class=o>&amp;</span><span class=n>attr</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>     
 </span></span><span class=line><span class=cl>    <span class=c1>// LogBuffer，作用：存储所有的日志信息
 </span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>logBuf</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LogBuffer</span><span class=p>(</span><span class=n>times</span><span class=p>);</span>
 </span></span><span class=line><span class=cl>     
@@ -1400,6 +1503,20 @@
 </span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>CommandListener</span><span class=o>*</span> <span class=n>cl</span> <span class=o>=</span> <span class=k>new</span> <span class=n>CommandListener</span><span class=p>(</span><span class=n>logBuf</span><span class=p>,</span> <span class=n>reader</span><span class=p>,</span> <span class=n>swl</span><span class=p>);</span>
 </span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>cl</span><span class=o>-&gt;</span><span class=n>startListener</span><span class=p>())</span> <span class=p>{</span>
 </span></span><span class=line><span class=cl>        <span class=n>exit</span><span class=p>(</span><span class=mi>1</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>LogAudit</span><span class=o>*</span> <span class=n>al</span> <span class=o>=</span> <span class=k>nullptr</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>auditd</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>al</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LogAudit</span><span class=p>(</span><span class=n>logBuf</span><span class=p>,</span> <span class=n>reader</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                          <span class=n>__android_logger_property_get_bool</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                              <span class=s>&#34;ro.logd.auditd.dmesg&#34;</span><span class=p>,</span> <span class=n>BOOL_DEFAULT_TRUE</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                              <span class=o>?</span> <span class=nl>fdDmesg</span>
+</span></span><span class=line><span class=cl>                              <span class=p>:</span> <span class=o>-</span><span class=mi>1</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>LogKlog</span><span class=o>*</span> <span class=n>kl</span> <span class=o>=</span> <span class=k>nullptr</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>klogd</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>kl</span> <span class=o>=</span> <span class=k>new</span> <span class=n>LogKlog</span><span class=p>(</span><span class=n>logBuf</span><span class=p>,</span> <span class=n>reader</span><span class=p>,</span> <span class=n>fdDmesg</span><span class=p>,</span> <span class=n>fdPmesg</span><span class=p>,</span> <span class=n>al</span> <span class=o>!=</span> <span class=k>nullptr</span><span class=p>);</span>
 </span></span><span class=line><span class=cl>    <span class=p>}</span>
 </span></span><span class=line><span class=cl>    <span class=c1>// ...
 </span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>exit</span><span class=p>(</span><span class=mi>0</span><span class=p>);</span>
@@ -1429,6 +1546,82 @@
 </span></span><span class=line><span class=cl>logd           <span class=m>335</span>   <span class=m>355</span>     <span class=m>1</span>   <span class=m>43924</span>  <span class=m>23872</span> poll_sche+          <span class=m>0</span> S logd.auditd
 </span></span><span class=line><span class=cl>logd           <span class=m>335</span>   <span class=m>624</span>     <span class=m>1</span>   <span class=m>43924</span>  <span class=m>23872</span> futex_wai+          <span class=m>0</span> S logd.reader.per
 </span></span><span class=line><span class=cl>logd           <span class=m>335</span>   <span class=m>666</span>     <span class=m>1</span>   <span class=m>43924</span>  <span class=m>23872</span> futex_wai+          <span class=m>0</span> S logd.reader.per
+</span></span></code></pre></td></tr></table></div></div><p>main函数中会启动reinit线程，等待reinit信号，之前我们从init.rc中得知启动logd之后就会启动logd-reinit，所以此时还是会调用main方法，但这次会传入<code>-reinit</code>参数调用到<code>issueReinit</code>，发送reinit指令，使得<code>reinit_thread_start</code>函数会被调用：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c++ data-lang=c++><span class=line><span class=cl><span class=k>static</span> <span class=kt>void</span><span class=o>*</span> <span class=nf>reinit_thread_start</span><span class=p>(</span><span class=kt>void</span><span class=o>*</span> <span class=cm>/*obj*/</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>prctl</span><span class=p>(</span><span class=n>PR_SET_NAME</span><span class=p>,</span> <span class=s>&#34;logd.daemon&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=n>reinit_running</span> <span class=o>&amp;&amp;</span> <span class=o>!</span><span class=n>sem_wait</span><span class=p>(</span><span class=o>&amp;</span><span class=n>reinit</span><span class=p>)</span> <span class=o>&amp;&amp;</span> <span class=n>reinit_running</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>fdDmesg</span> <span class=o>&gt;=</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>static</span> <span class=k>const</span> <span class=kt>char</span> <span class=n>reinit_message</span><span class=p>[]</span> <span class=o>=</span> <span class=p>{</span> <span class=n>KMSG_PRIORITY</span><span class=p>(</span><span class=n>LOG_INFO</span><span class=p>),</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;l&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;o&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;g&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;d&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;.&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;d&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;a&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;e&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;m&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;o&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;n&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;:&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39; &#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;r&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;e&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;i&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;n&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;i&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;t&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                                                   <span class=sc>&#39;\n&#39;</span> <span class=p>};</span>
+</span></span><span class=line><span class=cl>            <span class=n>write</span><span class=p>(</span><span class=n>fdDmesg</span><span class=p>,</span> <span class=n>reinit_message</span><span class=p>,</span> <span class=k>sizeof</span><span class=p>(</span><span class=n>reinit_message</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1>// Anything that reads persist.&lt;property&gt;
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=k>if</span> <span class=p>(</span><span class=n>logBuf</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>logBuf</span><span class=o>-&gt;</span><span class=n>init</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>            <span class=n>logBuf</span><span class=o>-&gt;</span><span class=n>initPrune</span><span class=p>(</span><span class=k>nullptr</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=n>android</span><span class=o>::</span><span class=n>ReReadEventLogTags</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=k>nullptr</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
 </span></span></code></pre></td></tr></table></div></div><h3 id=loglistener>LogListener</h3><p>位于<code>system/core/logd/LogListener.cpp</code>:</p><p>当有对端进程通过Socket传递过来数据后，onDataAvailable方法被调用，其中主要是解析数据、调用LogBuffer->log方法存储日志信息，调用LogReader→notifyNewLog方法通知有新的日志信息，以便发送给其客户端。如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
