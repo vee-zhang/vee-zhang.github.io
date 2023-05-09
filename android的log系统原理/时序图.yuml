@@ -1,0 +1,8 @@
+// {type:sequence}
+// {generate:true}
+
+[init]start>[logd]
+[App]jni>[liblog]
+[liblog]socket:logdw.>[logd]
+[logd]socket:logdr.>[liblog]
+[liblog]>[logcat]
